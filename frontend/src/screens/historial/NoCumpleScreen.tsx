@@ -1,4 +1,4 @@
-import { ResultadoAnalisis } from "../models/historial";
+import { ResultadoAnalisis } from "@/models/historial";
 
 type Props = { resultado: ResultadoAnalisis; onBack: () => void };
 

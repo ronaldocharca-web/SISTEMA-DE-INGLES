@@ -17,7 +17,7 @@ class Materia(BaseModel):
     docente: str = ""
 
 class ResultadoAnalisis(BaseModel):
-    estado: Literal["PUEDE_TOMAR", "NO_PUEDE_TOMAR", "REQUIERE_REVISION"]
+    estado: Literal["PUEDE_TOMAR", "NO_PUEDE_TOMAR", "REQUIERE_REVISION", "YA_INSCRITO", "PDF_NO_VALIDO", "INSCRIPCIONES_CERRADAS"]
     mensaje: str
     ci: str = ""
     nombre: str = ""
@@ -27,3 +27,4 @@ class ResultadoAnalisis(BaseModel):
     codigos_buscados: list[str] = Field(default_factory=list)
     materias_detectadas: int
     advertencias: list[str] = Field(default_factory=list)
+    convocatoria: dict | None = None

@@ -4,3 +4,6 @@ python-multipart
 pdfplumber
 pandas
 pydantic-settings
+openpyxl
+supabase
+python-dotenv

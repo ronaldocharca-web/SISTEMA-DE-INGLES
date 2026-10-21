@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
-import { ResultadoAnalisis } from "../models/historial";
-import { analizarHistorial } from "../services/historialService";
+import { ResultadoAnalisis } from "@/models/historial";
+import { analizarHistorial } from "@/services/historialService";
 
 export function useHistorialController() {
   const [resultado, setResultado] = useState<ResultadoAnalisis | null>(null);

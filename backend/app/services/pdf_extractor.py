@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import io
 import re
+import unicodedata
 
 import pdfplumber
 
@@ -11,13 +12,19 @@ PATRON_MATERIA = re.compile(
     r"(?:(\d+)\s+)?(?:(\d+)\s+)?(APROBADO|REPROBADO|ABANDONADO|ABANDONO)\s*(.*)$",
     re.IGNORECASE,
 )
-PATRON_CI = re.compile(r"C[eé]dula\s*:\s*(\d+)", re.IGNORECASE)
+PATRON_CI = re.compile(
+    r"\b(?:C[eé]dula|C\.\s*I\.?|CI)(?:\s+de\s+identidad)?\s*[:#-]?\s*(\d{5,})",
+    re.IGNORECASE,
+)
 PATRON_NOMBRE = re.compile(r"Nombre\(s\)\s*(.*?)\s+Fecha\s*[.:]", re.IGNORECASE)
-PATRON_RU = re.compile(r"Reg\.?\s*\.??\s*Univ\.?\s*:\s*(\d+)", re.IGNORECASE)
+PATRON_RU = re.compile(
+    r"\b(?:Reg\.?\s*\.?\s*Univ\.?|R\.\s*U\.?|RU)\s*[:#-]?\s*(\d{3,})",
+    re.IGNORECASE,
+)
 
 
 class PdfExtractor:
-    def extraer(self, contenido: bytes) -> tuple[list[dict[str, object]], str, str, str, list[str]]:
+    def extraer(self, contenido: bytes) -> tuple[list[dict[str, object]], str, str, str, list[str], list[str]]:
         registros: list[dict[str, object]] = []
         advertencias: list[str] = []
         gestion = ""
@@ -25,9 +32,11 @@ class PdfExtractor:
         ci = ""
         nombre = ""
         ru = ""
+        texto_completo = ""
         with pdfplumber.open(io.BytesIO(contenido)) as pdf:
             for pagina in pdf.pages:
                 texto = pagina.extract_text() or ""
+                texto_completo += f"\n{texto}"
                 if not texto.strip():
                     advertencias.append(f"La página {pagina.page_number} no contiene texto seleccionable.")
                     continue
@@ -68,4 +77,16 @@ class PdfExtractor:
                         continue
                     if ultima is not None and ultima["sigla"] == "INF-332" and linea.upper() == "SISTEMAS)":
                         ultima["materia"] = f"{ultima['materia']} {linea}"
-        return registros, ci, nombre, ru, sorted(set(advertencias))
+        normalizado = unicodedata.normalize("NFD", texto_completo.upper())
+        normalizado = "".join(c for c in normalizado if unicodedata.category(c) != "Mn")
+        marcadores = {
+            "HISTORIAL ACADEMICO": "título HISTORIAL ACADEMICO",
+            "SIGLA": "columna SIGLA",
+            "MATERIA": "columna MATERIA",
+            "NOTA": "columna NOTA",
+            "OBSERVACION": "columna OBSERVACION",
+        }
+        faltantes = [descripcion for marcador, descripcion in marcadores.items() if marcador not in normalizado]
+        if not registros:
+            faltantes.append("filas de materias académicas")
+        return registros, ci, nombre, ru, sorted(set(advertencias)), faltantes

@@ -3,6 +3,7 @@ from __future__ import annotations
 import unicodedata
 
 from app.repositories.rules_repository import RulesRepository
+from app.repositories.student_repository import StudentRepository
 from app.schemas.historial import ResultadoAnalisis
 from app.services.pdf_extractor import PdfExtractor
 
@@ -16,11 +17,38 @@ class AnalisisService:
     def __init__(self) -> None:
         self.extractor = PdfExtractor()
         self.rules = RulesRepository()
+        self.students = StudentRepository()
 
     def analizar(self, contenido: bytes, nombre_archivo: str) -> dict:
-        registros, ci, nombre_estudiante, ru, advertencias = self.extractor.extraer(contenido)
-        if not registros:
-            raise ValueError("No se encontraron materias. El PDF puede ser escaneado o tener otro formato.")
+        registros, ci, nombre_estudiante, ru, advertencias, faltantes = self.extractor.extraer(contenido)
+        if faltantes:
+            self.students.registrar_incidencia(
+                nombre_estudiante,
+                ci,
+                ru,
+                nombre_archivo,
+                "PDF rechazado: " + ", ".join(faltantes),
+            )
+            return ResultadoAnalisis(
+                estado="PDF_NO_VALIDO",
+                mensaje="Este archivo no es válido. Solo se aceptan historiales del estudiante.",
+                ci=ci,
+                nombre=nombre_estudiante,
+                ru=ru,
+                archivo=nombre_archivo,
+                materias_detectadas=len(registros),
+                advertencias=[f"Falta: {item}." for item in faltantes],
+            ).model_dump()
+        if self.students.esta_registrado(ci, ru):
+            return ResultadoAnalisis(
+                estado="YA_INSCRITO",
+                mensaje="Tú ya te inscribiste antes. No necesitas volver a llenar el formulario.",
+                ci=ci,
+                nombre=nombre_estudiante,
+                ru=ru,
+                archivo=nombre_archivo,
+                materias_detectadas=len(registros),
+            ).model_dump()
         codigos = tuple(normalizar(item) for item in self.rules.english_codes())
         materias_requisito = [
             registro for registro in registros
