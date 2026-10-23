@@ -5,17 +5,17 @@
   --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --font-display: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   
-  --bg-dark: #040d1a;
+  --bg-dark: #060811;
   --text-main: #f1f5f9;
   --text-muted: #94a3b8;
   --text-dim: #64748b;
   
   /* Glassmorphism surfaces */
-  --card-bg: rgba(10, 25, 47, 0.72);
-  --card-border: rgba(255, 255, 255, 0.12);
-  --card-border-glow: rgba(56, 189, 248, 0.28);
-  --card-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.06);
-  --inner-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  --card-bg: rgba(14, 18, 31, 0.82);
+  --card-border: rgba(148, 163, 184, 0.16);
+  --card-border-glow: rgba(56, 189, 248, 0.3);
+  --card-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.9), 0 12px 30px rgba(0, 0, 0, 0.28);
+  --inner-sheen: inset 0 1px 0 rgba(255, 255, 255, 0.1);
   
   /* Vibrant Accents */
   --primary-start: #38bdf8;
@@ -41,10 +41,10 @@ body {
   color: var(--text-main);
   background-color: var(--bg-dark);
   background: 
-    radial-gradient(circle at 50% 0%, rgba(14, 116, 144, 0.28) 0%, transparent 65%),
-    radial-gradient(circle at 15% 30%, rgba(3, 105, 161, 0.22) 0%, transparent 50%),
-    radial-gradient(circle at 85% 70%, rgba(30, 58, 138, 0.25) 0%, transparent 55%),
-    linear-gradient(135deg, rgba(3, 12, 35, 0.82), rgba(12, 43, 97, 0.4)),
+    radial-gradient(circle at 50% -10%, rgba(34, 211, 238, 0.18) 0%, transparent 48%),
+    radial-gradient(circle at 8% 35%, rgba(59, 130, 246, 0.12) 0%, transparent 38%),
+    radial-gradient(circle at 92% 75%, rgba(124, 58, 237, 0.15) 0%, transparent 42%),
+    linear-gradient(135deg, rgba(3, 5, 12, 0.88), rgba(10, 15, 30, 0.76)),
     url("/fondo-ingles-v2.png") center / cover fixed no-repeat;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -55,7 +55,7 @@ body::before {
   position: fixed;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(circle at 50% 50%, rgba(3, 13, 39, 0.1), rgba(2, 8, 22, 0.8));
+  background: radial-gradient(circle at 50% 50%, rgba(8, 12, 25, 0.1), rgba(2, 4, 10, 0.88));
   pointer-events: none;
 }
 
@@ -74,7 +74,7 @@ button {
 .container {
   width: min(100% - 36px, 860px);
   margin: 0 auto;
-  padding: 56px 0 88px;
+  padding: 64px 0 96px;
 }
 
 .container:has(.admin-dashboard) {
@@ -147,15 +147,16 @@ h1 {
   margin: 0 auto;
   padding: clamp(28px, 4.5vw, 42px);
   border: 1px solid var(--card-border);
-  border-radius: 28px;
-  background: linear-gradient(160deg, rgba(16, 36, 71, 0.78), rgba(8, 20, 42, 0.85));
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(22, 28, 46, 0.9), rgba(8, 11, 22, 0.94));
   box-shadow: var(--card-shadow), var(--inner-sheen);
   backdrop-filter: blur(24px) saturate(160%);
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .card:hover {
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: var(--card-border-glow);
+  box-shadow: var(--card-shadow), 0 0 0 1px rgba(56, 189, 248, 0.08), 0 0 40px rgba(56, 189, 248, 0.08);
 }
 
 /* =========================================
@@ -174,10 +175,10 @@ label {
 input {
   width: 100%;
   border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 13px 18px;
   color: #f8fafc;
-  background: rgba(6, 17, 38, 0.65);
+  background: rgba(3, 6, 15, 0.72);
   outline: none;
   font-size: 15px;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -214,13 +215,13 @@ button {
   gap: 10px;
   margin-top: 18px;
   border: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 14px 24px;
   color: #03162b;
-  background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+  background: linear-gradient(135deg, #67e8f9 0%, #0891b2 48%, #2563eb 100%);
   font-weight: 700;
   font-size: 15px;
-  box-shadow: 0 10px 25px -4px rgba(14, 165, 233, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  box-shadow: 0 12px 28px -8px rgba(6, 182, 212, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -243,8 +244,8 @@ button:disabled {
 .secondary {
   margin-left: 8px;
   color: #e2e8f0;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(148, 163, 184, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
@@ -272,8 +273,8 @@ button:disabled {
   gap: 14px;
   padding: 36px 24px;
   border: 2px dashed rgba(56, 189, 248, 0.35);
-  border-radius: 20px;
-  background: rgba(8, 22, 48, 0.5);
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(10, 18, 34, 0.78), rgba(4, 7, 16, 0.72));
   text-align: center;
   cursor: pointer;
   transition: all 0.25s ease;
@@ -444,13 +445,23 @@ button:disabled {
 }
 
 .result.puede_tomar, .puede_tomar {
-  border: 1px solid rgba(52, 211, 153, 0.4);
-  background: linear-gradient(145deg, rgba(6, 78, 59, 0.55), rgba(4, 47, 36, 0.65));
-  box-shadow: 0 12px 36px rgba(5, 150, 105, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.98);
+  background: linear-gradient(145deg, #ffffff, #e4e4e7);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.72), 0 0 44px rgba(255, 255, 255, 0.34), 0 16px 38px rgba(0, 0, 0, 0.5);
 }
 
 .result.puede_tomar .status, .puede_tomar .status {
-  color: #34d399;
+  color: #18181b;
+}
+
+.result.puede_tomar h2, .puede_tomar h2 {
+  color: #09090b;
+}
+
+.result-message {
+  color: #3f3f46;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 .result.no_puede_tomar {
@@ -611,8 +622,8 @@ button:disabled {
   width: 100%;
   padding: clamp(24px, 3.5vw, 40px);
   border: 1px solid var(--card-border);
-  border-radius: 30px;
-  background: linear-gradient(155deg, rgba(14, 30, 60, 0.88), rgba(6, 16, 35, 0.92));
+  border-radius: 24px;
+  background: linear-gradient(155deg, rgba(21, 27, 45, 0.94), rgba(7, 10, 20, 0.96));
   box-shadow: var(--card-shadow), var(--inner-sheen);
   backdrop-filter: blur(28px) saturate(160%);
 }
@@ -754,7 +765,7 @@ button:disabled {
 
 .dashboard-tabs button.active {
   color: #03162b;
-  background: linear-gradient(135deg, #38bdf8, #0284c7);
+  background: linear-gradient(135deg, #67e8f9, #2563eb);
   font-weight: 700;
   box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
 }
@@ -922,6 +933,24 @@ tbody tr:hover {
   font-weight: 800;
 }
 
+/* Convocatoria abierta: mismo estilo claro del aviso de requisitos. */
+.convocatoria-publica.open {
+  border: 1px solid rgba(228, 228, 231, 0.62);
+  background: linear-gradient(135deg, #5b5b62, #343438);
+  box-shadow: 0 0 16px rgba(228, 228, 231, 0.4), 0 0 34px rgba(161, 161, 170, 0.26), 0 14px 32px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.convocatoria-publica.open .status,
+.convocatoria-publica.open h2,
+.convocatoria-publica.open p {
+  color: #f4f4f5;
+}
+
+.convocatoria-publica.open .status-dot {
+  background: #f4f4f5;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.7);
+}
+
 .convocatoria-form {
   margin-top: 20px;
 }
@@ -1063,4 +1092,397 @@ tbody tr:hover {
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+/* Fondo oscuro aclarado para conservar detalle visual */
+body {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(255, 255, 255, 0.13), transparent 46%),
+    radial-gradient(circle at 8% 40%, rgba(120, 120, 120, 0.09), transparent 38%),
+    radial-gradient(circle at 92% 70%, rgba(80, 80, 80, 0.1), transparent 40%),
+    linear-gradient(135deg, rgba(8, 8, 10, 0.78), rgba(24, 24, 27, 0.72)),
+    url("/fondo-ingles-v2.png") center / cover fixed no-repeat;
+}
+
+body::before {
+  background: radial-gradient(circle at 50% 50%, rgba(20, 20, 20, 0.03), rgba(0, 0, 0, 0.58));
+}
+
+/* Ajuste de contraste para la pantalla principal */
+body {
+  background:
+    linear-gradient(135deg, rgba(4, 4, 5, 0.48), rgba(12, 12, 14, 0.38)),
+    url("/fondo-hexagonos.png") center / cover fixed no-repeat;
+  background-blend-mode: multiply;
+}
+
+body::before {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.18));
+}
+
+/* Estilo definitivo del aviso: grafito y gris, sin tonos ámbar */
+.convocatoria-publica.closed {
+  border: 1px solid rgba(212, 212, 216, 0.42) !important;
+  background: linear-gradient(145deg, rgba(58, 58, 62, 0.94), rgba(17, 17, 19, 0.98)) !important;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.13) !important;
+}
+
+.convocatoria-publica.closed .status,
+.convocatoria-publica.closed h2,
+.convocatoria-publica.closed p {
+  color: #eeeeef !important;
+}
+
+.convocatoria-publica.closed .status-dot {
+  background: #d4d4d8 !important;
+  box-shadow: 0 0 9px rgba(229, 229, 229, 0.85) !important;
+}
+
+/* Convocatoria cerrada en tonos grafito, sin amarillo/café */
+.convocatoria-status.closed,
+.convocatoria-publica.closed {
+  border-color: rgba(212, 212, 216, 0.34);
+  background: linear-gradient(145deg, rgba(54, 54, 58, 0.9), rgba(18, 18, 20, 0.96));
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.convocatoria-status.closed span,
+.convocatoria-publica.closed span {
+  color: #e5e5e5;
+}
+
+.convocatoria-status.closed .status-dot,
+.convocatoria-publica.closed .status-dot {
+  background: #d4d4d8;
+  box-shadow: 0 0 9px rgba(229, 229, 229, 0.8);
+}
+
+.convocatoria-status.closed small,
+.convocatoria-publica.closed p {
+  color: #d4d4d8;
+}
+
+/* Vista compacta de escritorio: contenido principal en una sola pantalla */
+@media (min-width: 801px) and (min-height: 650px) {
+  .container:has(.student-entry) {
+    width: min(100% - 56px, 1240px);
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(330px, 0.86fr) minmax(500px, 1.14fr);
+    align-items: center;
+    gap: clamp(34px, 6vw, 86px);
+    padding: 28px 0;
+  }
+
+  .container:has(.student-entry) .hero {
+    max-width: 520px;
+    margin: 0;
+    padding: 0;
+    text-align: left;
+  }
+
+  .container:has(.student-entry) .hero::after {
+    margin-left: 0;
+  }
+
+  .container:has(.student-entry) .hero h1 {
+    font-size: clamp(38px, 4vw, 56px);
+  }
+
+  .container:has(.student-entry) .hero .subtitle {
+    margin-left: 0;
+    font-size: 15px;
+  }
+
+  .container:has(.student-entry) .student-entry,
+  .container:has(.student-entry) .student-entry > .card {
+    width: 100%;
+  }
+
+  .container {
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  .hero {
+    margin-bottom: 22px;
+  }
+
+  .hero h1 {
+    margin-top: 18px;
+    margin-bottom: 10px;
+    font-size: clamp(34px, 4.2vw, 48px);
+  }
+
+  .hero .subtitle {
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .hero::after {
+    margin-top: 14px;
+  }
+
+  .card {
+    padding: 22px 28px;
+  }
+
+  .convocatoria-publica {
+    gap: 4px;
+    margin: 0 0 16px;
+    padding: 14px 18px;
+  }
+
+  .convocatoria-publica h2 {
+    margin: 4px 0;
+    font-size: 20px;
+  }
+
+  .convocatoria-publica p {
+    font-size: 13px;
+  }
+
+  .dropzone-container {
+    margin: 10px 0;
+  }
+
+  .dropzone {
+    gap: 8px;
+    padding: 20px 18px;
+  }
+
+  button {
+    margin-top: 12px;
+    padding: 11px 20px;
+  }
+}
+
+.convocatoria-status.closed,
+.convocatoria-publica.closed {
+  border-color: rgba(245, 158, 11, 0.62);
+  background: linear-gradient(145deg, rgba(66, 54, 34, 0.82), rgba(31, 30, 28, 0.9));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.convocatoria-status.closed span,
+.convocatoria-publica.closed span {
+  color: #fbbf24;
+}
+
+.convocatoria-status.closed small,
+.convocatoria-publica.closed p {
+  color: #e7e5e4;
+}
+
+/* =========================================
+   DARK CHARCOAL THEME
+   ========================================= */
+
+:root {
+  --bg-dark: #050505;
+  --text-main: #f5f5f5;
+  --text-muted: #a3a3a3;
+  --text-dim: #737373;
+  --card-border: rgba(255, 255, 255, 0.13);
+  --card-border-glow: rgba(255, 255, 255, 0.3);
+  --card-shadow: 0 30px 70px -24px rgba(0, 0, 0, 0.95), 0 12px 30px rgba(0, 0, 0, 0.55);
+}
+
+body {
+  background:
+    radial-gradient(circle at 50% -15%, rgba(255, 255, 255, 0.08), transparent 42%),
+    radial-gradient(circle at 10% 35%, rgba(255, 255, 255, 0.035), transparent 35%),
+    linear-gradient(135deg, rgba(0, 0, 0, 0.96), rgba(18, 18, 18, 0.92)),
+    url("/fondo-ingles-v2.png") center / cover fixed no-repeat;
+}
+
+body::before {
+  background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.05), rgba(0, 0, 0, 0.9));
+}
+
+.eyebrow {
+  color: #d4d4d4;
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.35);
+}
+
+.eyebrow::before {
+  background: #e5e5e5;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.75);
+}
+
+h1 {
+  background: linear-gradient(135deg, #ffffff 20%, #d4d4d4 70%, #737373 100%);
+}
+
+.card,
+.admin-dashboard {
+  background: linear-gradient(145deg, rgba(28, 28, 28, 0.94), rgba(7, 7, 7, 0.97));
+}
+
+input {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.68);
+}
+
+input:focus {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(18, 18, 18, 0.9);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1), inset 0 2px 4px rgba(0, 0, 0, 0.45);
+}
+
+button {
+  color: #050505;
+  background: linear-gradient(135deg, #f5f5f5, #a3a3a3);
+  box-shadow: 0 12px 28px -8px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+button:hover:not(:disabled) {
+  filter: brightness(1.12);
+  box-shadow: 0 15px 30px -8px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.secondary,
+.admin-icon {
+  color: #e5e5e5;
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.17);
+}
+
+.secondary:hover:not(:disabled),
+.admin-icon:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.6);
+}
+
+.dropzone {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: linear-gradient(145deg, rgba(25, 25, 25, 0.78), rgba(4, 4, 4, 0.82));
+}
+
+.dropzone:hover:not(.disabled),
+.dropzone.active {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.75);
+}
+
+.dropzone-icon {
+  color: #e5e5e5;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.dashboard-tabs {
+  background: rgba(0, 0, 0, 0.72);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.dashboard-tabs button.active {
+  color: #050505;
+  background: linear-gradient(135deg, #f5f5f5, #a3a3a3);
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.8);
+}
+
+.dashboard-section,
+.admin-convocatoria,
+.closed-call,
+.admin-credentials {
+  background: rgba(7, 7, 7, 0.76);
+}
+
+.dashboard-stats article,
+.table-wrap {
+  background: linear-gradient(145deg, rgba(26, 26, 26, 0.72), rgba(5, 5, 5, 0.8));
+}
+
+th {
+  color: #d4d4d4;
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.subject-code {
+  color: #e5e5e5;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+/* Hero refinado: evita el bloque blanco del título y mejora la jerarquía */
+.hero {
+  position: relative;
+  max-width: 920px;
+  margin-bottom: 42px;
+  padding: 2px 12px 0;
+}
+
+.hero::after {
+  content: "";
+  display: block;
+  width: 74px;
+  height: 3px;
+  margin: 24px auto 0;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #e5e5e5, transparent);
+  opacity: 0.75;
+}
+
+.hero h1 {
+  display: block;
+  max-width: 900px;
+  margin: 26px auto 18px;
+  color: #f5f5f5;
+  background: none !important;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: #f5f5f5;
+  text-shadow: 0 5px 24px rgba(0, 0, 0, 0.72);
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1.08;
+  letter-spacing: -0.045em;
+}
+
+.hero .subtitle {
+  max-width: 680px;
+  color: #bdbdbd;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+.hero .eyebrow {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 10px 28px rgba(0, 0, 0, 0.35);
+}
+
+.student-entry > .card {
+  box-shadow: 0 30px 80px -28px rgba(0, 0, 0, 0.98), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+@media (max-width: 640px) {
+  .hero {
+    margin-bottom: 30px;
+    padding-inline: 0;
+  }
+
+  .hero h1 {
+    margin-top: 22px;
+    font-size: clamp(30px, 10vw, 42px);
+  }
+
+  .hero .subtitle {
+    font-size: 15px;
+  }
+}
+
+/* Fondo final activo de la página */
+body {
+  background:
+    linear-gradient(135deg, rgba(4, 4, 5, 0.48), rgba(12, 12, 14, 0.38)),
+    url("/fondo-hexagonos.png") center / cover fixed no-repeat;
+  background-blend-mode: multiply;
+}
+
+body::before {
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.18));
 }

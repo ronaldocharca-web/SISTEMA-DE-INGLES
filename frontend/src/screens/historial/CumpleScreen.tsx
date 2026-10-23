@@ -38,7 +38,7 @@ export function CumpleScreen({ resultado, onBack }: Props) {
           CUMPLE LOS REQUISITOS
         </span>
         <h2>Habilitado para continuar con el registro</h2>
-        <p style={{ color: "#a7f3d0", fontSize: "15px", lineHeight: "1.6" }}>{resultado.mensaje}</p>
+        <p className="result-message">{resultado.mensaje}</p>
       </div>
 
       {estado === "success" || estado === "duplicate" ? (
