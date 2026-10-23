@@ -179,6 +179,42 @@ supabase
 python-dotenv
 ```
 
+## Despliegue en Vercel
+
+El proyecto se publica como **dos proyectos de Vercel** desde el mismo
+repositorio: uno para `backend/` (FastAPI) y otro para `frontend/` (Next.js).
+
+1. Sube este proyecto a un repositorio privado de GitHub. No incluyas
+   `backend/.env` ni `frontend/.env.local`.
+2. En Vercel, crea un proyecto importando el repositorio y configura el
+   **Root Directory** como `backend`.
+3. En el proyecto del backend agrega estas variables de entorno:
+
+   ```ini
+   SUPABASE_URL=https://tu-proyecto.supabase.co
+   SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
+   SUPABASE_SECRET_KEY=sb_secret_...
+   CORS_ORIGINS=https://tu-frontend.vercel.app
+   ```
+
+   La entrada `backend/index.py` permite que Vercel reconozca la aplicación
+   FastAPI.
+4. Despliega el backend y copia su URL pública, por ejemplo:
+   `https://sistema-ingles-api.vercel.app`.
+5. Crea un segundo proyecto en Vercel desde el mismo repositorio, esta vez con
+   **Root Directory** igual a `frontend`.
+6. En el proyecto del frontend crea esta variable de entorno:
+
+   ```ini
+   NEXT_PUBLIC_API_URL=https://sistema-ingles-api.vercel.app/api/v1
+   ```
+
+7. Despliega el frontend. Finalmente actualiza `CORS_ORIGINS` del backend con
+   la URL final del frontend y vuelve a desplegar el backend.
+
+Nunca publiques las claves `SUPABASE_SECRET_KEY`, `ADMIN_TOKEN` ni contraseñas
+en GitHub o en variables que comiencen con `NEXT_PUBLIC_`.
+
 El frontend utilizará Next.js, React y TypeScript.
 
 ## Consideraciones importantes
