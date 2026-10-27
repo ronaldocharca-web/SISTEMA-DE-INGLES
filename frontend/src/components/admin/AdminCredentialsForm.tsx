@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { actualizarCredencialesAdmin } from "@/services/historialService";
+import { actualizarCredencialesAdmin } from "@/services/adminService";
 
 type Props = { token: string };
 

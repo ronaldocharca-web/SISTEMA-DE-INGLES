@@ -4,6 +4,7 @@ export type RegistroEstudiante = {
   ru: string;
   correo: string;
   celular: string;
+  pdf_token: string;
 };
 
 export type RegistroEstudianteResponse = {

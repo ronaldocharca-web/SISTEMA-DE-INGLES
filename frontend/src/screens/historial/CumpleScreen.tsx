@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { ResultadoAnalisis } from "@/models/historial";
-import { registrarEstudiante } from "@/services/historialService";
+import { liberarReservaPdf, registrarEstudiante } from "@/services/historialService";
 
 type Props = { resultado: ResultadoAnalisis; onBack: () => void };
 
@@ -21,6 +21,7 @@ export function CumpleScreen({ resultado, onBack }: Props) {
         ru: String(valores.ru),
         correo: String(valores.correo),
         celular: String(valores.celular),
+        pdf_token: resultado.pdf_token ?? "",
       });
       setMensaje(respuesta.mensaje);
       setEstado(respuesta.duplicado ? "duplicate" : "success");
@@ -28,6 +29,10 @@ export function CumpleScreen({ resultado, onBack }: Props) {
       setMensaje(error instanceof Error ? error.message : "No fue posible registrar los datos.");
       setEstado("error");
     }
+  }
+
+  function volver() {
+    void liberarReservaPdf(resultado.pdf_token).finally(onBack);
   }
 
   return (
@@ -56,29 +61,29 @@ export function CumpleScreen({ resultado, onBack }: Props) {
           <h2 style={{ fontSize: "20px", marginTop: "12px" }}>Confirmar datos del estudiante</h2>
           
           <label>
-            Nombre completo
-            <input required name="nombre" defaultValue={resultado.nombre} placeholder="Nombres y Apellidos" />
+            Nombre completo <span className="required-mark">*</span>
+            <input required aria-required="true" minLength={2} name="nombre" defaultValue={resultado.nombre} placeholder="Nombres y Apellidos" />
           </label>
 
           <div className="form-grid-2">
             <label>
-              Cédula de identidad (CI)
-              <input required name="ci" defaultValue={resultado.ci} placeholder="Ej: 8392102" />
+              Cédula de identidad (CI) <span className="required-mark">*</span>
+              <input required aria-required="true" minLength={3} name="ci" defaultValue={resultado.ci} placeholder="Ej: 8392102" />
             </label>
             <label>
-              Registro Universitario (RU)
-              <input required name="ru" defaultValue={resultado.ru} placeholder="Ej: 1729381" />
+              Registro Universitario (RU) <span className="required-mark">*</span>
+              <input required aria-required="true" minLength={3} name="ru" defaultValue={resultado.ru} placeholder="Ej: 1729381" />
             </label>
           </div>
 
           <div className="form-grid-2">
             <label>
-              Correo electrónico
-              <input required type="email" name="correo" placeholder="estudiante@umsa.bo" />
+              Correo electrónico <span className="required-mark">*</span>
+              <input required aria-required="true" type="email" name="correo" placeholder="estudiante@umsa.bo" />
             </label>
             <label>
-              Número de WhatsApp / Celular
-              <input required type="tel" name="celular" placeholder="Ej: 71234567" />
+              Número de WhatsApp / Celular <span className="required-mark">*</span>
+              <input required aria-required="true" type="tel" name="celular" inputMode="tel" minLength={7} maxLength={15} pattern="[0-9 +()-]{7,15}" placeholder="Ej: 71234567" />
             </label>
           </div>
 
@@ -90,7 +95,7 @@ export function CumpleScreen({ resultado, onBack }: Props) {
         </form>
       )}
 
-      <button className="secondary" type="button" onClick={onBack} style={{ marginTop: "16px" }}>
+      <button className="secondary" type="button" onClick={volver} style={{ marginTop: "16px" }}>
         ← Analizar otro historial
       </button>
     </section>

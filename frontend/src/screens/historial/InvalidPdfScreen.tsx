@@ -1,6 +1,6 @@
-type Props = { onBack: () => void };
+type Props = { mensaje: string; onBack: () => void };
 
-export function InvalidPdfScreen({ onBack }: Props) {
+export function InvalidPdfScreen({ mensaje, onBack }: Props) {
   return (
     <section className="card result no_puede_tomar">
       <span className="status">
@@ -9,7 +9,7 @@ export function InvalidPdfScreen({ onBack }: Props) {
       </span>
       <h2>Archivo no reconocido</h2>
       <p style={{ color: "#fca5a5", fontSize: "15px", lineHeight: "1.6" }}>
-        El archivo cargado no corresponde a un historial académico oficial o el formato no es compatible. Solo se admiten historiales académicos con texto legible.
+        {mensaje}
       </p>
 
       <button type="button" onClick={onBack} style={{ marginTop: "18px" }}>

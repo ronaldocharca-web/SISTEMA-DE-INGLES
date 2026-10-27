@@ -3,26 +3,14 @@
 import { FormEvent, useState } from "react";
 
 import { Convocatoria } from "@/models/admin";
-import { actualizarFinConvocatoriaAdmin } from "@/services/historialService";
+import { actualizarFinConvocatoriaAdmin } from "@/services/adminService";
+import { fechaParaInput, mostrarFecha } from "@/utils/date";
 
 type Props = {
   token: string;
   convocatoria: Convocatoria | null;
   onSaved: () => Promise<void>;
 };
-
-function mostrarFecha(fecha: string): string {
-  return new Intl.DateTimeFormat("es-BO", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(fecha));
-}
-
-function valorLocal(fecha: string): string {
-  const valor = new Date(fecha);
-  const pad = (numero: number) => String(numero).padStart(2, "0");
-  return `${valor.getFullYear()}-${pad(valor.getMonth() + 1)}-${pad(valor.getDate())}T${pad(valor.getHours())}:${pad(valor.getMinutes())}`;
-}
 
 export function EstadoConvocatoria({ token, convocatoria, onSaved }: Props) {
   const [cargando, setCargando] = useState(false);
@@ -57,14 +45,15 @@ export function EstadoConvocatoria({ token, convocatoria, onSaved }: Props) {
 
   return (
     <div className="dashboard-section convocatoria-state">
-      <span className="status">CONVOCATORIA ACTUAL</span>
+      <span className="status">{convocatoria.abierta ? "CONVOCATORIA ACTUAL" : "ÚLTIMA CONVOCATORIA"}</span>
       <h3>{convocatoria.nombre}</h3>
+      <p className="convocatoria-meta">Gestión {convocatoria.gestion} · {convocatoria.semestre}</p>
       <div className={`convocatoria-status ${convocatoria.abierta ? "open" : "closed"}`}>
         <strong>{convocatoria.abierta ? "Inscripciones abiertas" : "Inscripciones cerradas"}</strong>
         <small>Desde {mostrarFecha(convocatoria.inicio)} hasta {mostrarFecha(convocatoria.fin)}</small>
       </div>
       <form className="student-form close-date-form" onSubmit={actualizar}>
-        <label>Extender o modificar fecha de cierre<input required name="fin" type="datetime-local" defaultValue={valorLocal(convocatoria.fin)} /></label>
+        <label>Extender o modificar fecha de cierre<input required name="fin" type="datetime-local" defaultValue={fechaParaInput(convocatoria.fin)} /></label>
         <button disabled={cargando} type="submit">{cargando ? "Actualizando..." : "Actualizar cierre"}</button>
       </form>
       {mensaje && <div className="alert success">{mensaje}</div>}

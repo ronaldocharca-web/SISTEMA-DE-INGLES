@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { iniciarSesionAdmin } from "@/services/historialService";
+import { iniciarSesionAdmin } from "@/services/adminService";
 
 type Props = { onSuccess: (token: string) => void; onBack: () => void };
 

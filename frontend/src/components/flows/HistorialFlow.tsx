@@ -15,6 +15,6 @@ export function HistorialFlow() {
   if (controller.resultado?.estado === "PUEDE_TOMAR") return <CumpleScreen resultado={controller.resultado} onBack={controller.reiniciar} />;
   if (controller.resultado?.estado === "REQUIERE_REVISION") return <RevisionScreen mensaje={controller.resultado.mensaje} onBack={controller.reiniciar} />;
   if (controller.resultado?.estado === "YA_INSCRITO") return <YaInscritoScreen resultado={controller.resultado} onBack={controller.reiniciar} />;
-  if (controller.resultado?.estado === "PDF_NO_VALIDO") return <InvalidPdfScreen onBack={controller.reiniciar} />;
+  if (controller.resultado?.estado === "PDF_NO_VALIDO") return <InvalidPdfScreen mensaje={controller.resultado.mensaje} onBack={controller.reiniciar} />;
   return <UploadScreen cargando={controller.cargando} error={controller.error} onUpload={controller.analizar} />;
 }

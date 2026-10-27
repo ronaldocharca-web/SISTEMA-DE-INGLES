@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 
 import { Convocatoria } from "@/models/admin";
-import { crearConvocatoriaAdmin } from "@/services/historialService";
+import { crearConvocatoriaAdmin } from "@/services/adminService";
 
 type Props = {
   token: string;
@@ -38,6 +38,8 @@ export function ConvocatoriaForm({ token, actual, onSaved }: Props) {
       await crearConvocatoriaAdmin(
         token,
         String(valores.nombre),
+        Number(valores.gestion),
+        String(valores.semestre) as "Primer semestre" | "Segundo semestre",
         inicio.toISOString(),
         fin.toISOString(),
       );
@@ -57,7 +59,11 @@ export function ConvocatoriaForm({ token, actual, onSaved }: Props) {
       <h3>Crear convocatoria</h3>
       <p className="hint">Define el período para un nuevo examen. La convocatoria actual pasará al historial y conservará sus estudiantes.</p>
       <form onSubmit={guardar} className="student-form convocatoria-form">
-        <label>Nombre de la convocatoria<input required name="nombre" placeholder="Ejemplo: Examen noviembre 2026" /></label>
+        <label>Nombre de la convocatoria<input required name="nombre" placeholder="Ejemplo: Examen de clasificación de inglés" /></label>
+        <div className="form-grid-2">
+          <label>Gestión<input required type="number" name="gestion" min="2000" max="2100" defaultValue={new Date().getFullYear()} /></label>
+          <label>Semestre<select required name="semestre" defaultValue="Segundo semestre"><option value="Primer semestre">Primer semestre</option><option value="Segundo semestre">Segundo semestre</option></select></label>
+        </div>
         <div className="date-grid">
           <label>Desde<input required type="datetime-local" name="inicio" /></label>
           <label>Hasta<input required type="datetime-local" name="fin" /></label>

@@ -224,6 +224,11 @@ El frontend utilizará Next.js, React y TypeScript.
 - Los archivos con datos personales deben procesarse de forma temporal y eliminarse después del análisis.
 - La API debe limitar el tamaño del archivo y aceptar únicamente PDF.
 - La interfaz debe mostrar una advertencia cuando el documento no tenga texto seleccionable.
+- Cada PDF válido se reserva durante 20 minutos mientras el estudiante completa
+  el formulario. Su huella SHA-256, no el archivo, impide usarlo al mismo tiempo
+  desde otro equipo o volver a usarlo después del registro.
+- Para habilitar ese bloqueo compartido en Supabase, ejecuta
+  `backend/supabase/migration_pdf_usos.sql` en el SQL Editor.
 - Antes de publicar el sistema, se deben probar historiales reales anonimizados con materias aprobadas, reprobadas, abandonadas y sin inglés.
 
 ## Próximos pasos
@@ -282,9 +287,14 @@ Para un despliegue con varios servidores o en Vercel, el archivo Excel local no 
 ## Convocatorias y fechas de inscripción
 
 Desde el panel administrativo se puede definir el nombre de una convocatoria y
-el intervalo exacto de inicio y finalización. La carga del historial queda
+la gestión, el semestre y el intervalo exacto de inicio y finalización. La
+carga del historial queda
 deshabilitada fuera de ese intervalo y el backend vuelve a validar la fecha al
 guardar los datos del estudiante.
+
+La gestión acepta un año, por ejemplo `2026`, y el semestre puede ser `Primer
+semestre` o `Segundo semestre`. Estos datos aparecen en el encabezado del Word
+de clasificación y en la hoja `Convocatoria` del Excel descargado.
 
 Al iniciar una nueva convocatoria, la tabla administrativa comienza vacía y el
 estudiante puede volver a inscribirse para ese nuevo período. Los registros de

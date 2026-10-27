@@ -18,6 +18,8 @@ export type AdminStudentsResponse = {
 export type Convocatoria = {
   id: string;
   nombre: string;
+  gestion: number;
+  semestre: "Primer semestre" | "Segundo semestre";
   inicio: string;
   fin: string;
   activa: boolean;
