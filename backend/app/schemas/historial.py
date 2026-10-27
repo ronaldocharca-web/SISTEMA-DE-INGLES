@@ -28,3 +28,4 @@ class ResultadoAnalisis(BaseModel):
     materias_detectadas: int
     advertencias: list[str] = Field(default_factory=list)
     convocatoria: dict | None = None
+    pdf_token: str | None = None

@@ -7,3 +7,7 @@ pydantic-settings
 openpyxl
 supabase
 python-dotenv
+python-docx
+reportlab
+pytest
+httpx

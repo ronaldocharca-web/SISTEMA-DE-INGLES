@@ -39,15 +39,28 @@ class ConvocatoriaRepository:
 
     def obtener_actual(self) -> dict | None:
         if self.supabase is not None:
-            filas = (
-                self.supabase.table("convocatorias")
-                .select("id,nombre,inicio,fin,activa")
-                .eq("activa", True)
-                .order("created_at", desc=True)
-                .limit(1)
-                .execute()
-                .data
-            )
+            try:
+                filas = (
+                    self.supabase.table("convocatorias")
+                    .select("id,nombre,gestion,semestre,inicio,fin,activa")
+                    .eq("activa", True)
+                    .order("created_at", desc=True)
+                    .limit(1)
+                    .execute()
+                    .data
+                )
+            except Exception as error:
+                if "gestion" not in str(error) and "semestre" not in str(error):
+                    raise
+                filas = (
+                    self.supabase.table("convocatorias")
+                    .select("id,nombre,inicio,fin,activa")
+                    .eq("activa", True)
+                    .order("created_at", desc=True)
+                    .limit(1)
+                    .execute()
+                    .data
+                )
             convocatoria = filas[0] if filas else None
         else:
             if not self.path.exists():
@@ -61,6 +74,8 @@ class ConvocatoriaRepository:
         ahora = datetime.now(timezone.utc)
         return {
             **convocatoria,
+            "gestion": convocatoria.get("gestion", inicio.year),
+            "semestre": convocatoria.get("semestre", "Segundo semestre"),
             "inicio": inicio.isoformat(),
             "fin": fin.isoformat(),
             "abierta": inicio <= ahora <= fin,
@@ -81,18 +96,33 @@ class ConvocatoriaRepository:
     def listar_cerradas(self) -> list[dict]:
         if self.supabase is None:
             return []
-        filas = (
-            self.supabase.table("convocatorias")
-            .select("id,nombre,inicio,fin,activa,created_at")
-            .eq("activa", False)
-            .order("created_at", desc=True)
-            .execute()
-            .data
-            or []
-        )
+        try:
+            filas = (
+                self.supabase.table("convocatorias")
+                .select("id,nombre,gestion,semestre,inicio,fin,activa,created_at")
+                .eq("activa", False)
+                .order("created_at", desc=True)
+                .execute()
+                .data
+                or []
+            )
+        except Exception as error:
+            if "gestion" not in str(error) and "semestre" not in str(error):
+                raise
+            filas = (
+                self.supabase.table("convocatorias")
+                .select("id,nombre,inicio,fin,activa,created_at")
+                .eq("activa", False)
+                .order("created_at", desc=True)
+                .execute()
+                .data
+                or []
+            )
         return [
             {
                 **fila,
+                "gestion": fila.get("gestion", self._fecha(fila["inicio"]).year),
+                "semestre": fila.get("semestre", "Segundo semestre"),
                 "inicio": self._fecha(fila["inicio"]).isoformat(),
                 "fin": self._fecha(fila["fin"]).isoformat(),
                 "abierta": False,
@@ -104,18 +134,28 @@ class ConvocatoriaRepository:
         inicio = self._fecha(datos.inicio).isoformat()
         fin = self._fecha(datos.fin).isoformat()
         if self.supabase is not None:
-            filas = (
-                self.supabase.rpc(
-                    "create_exam_convocatoria",
-                    {
-                        "p_nombre": datos.nombre.strip(),
-                        "p_inicio": inicio,
-                        "p_fin": fin,
-                    },
+            try:
+                filas = (
+                    self.supabase.rpc(
+                        "create_exam_convocatoria",
+                        {
+                            "p_nombre": datos.nombre.strip(),
+                            "p_gestion": datos.gestion,
+                            "p_semestre": datos.semestre,
+                            "p_inicio": inicio,
+                            "p_fin": fin,
+                        },
+                    )
+                    .execute()
+                    .data
                 )
-                .execute()
-                .data
-            )
+            except Exception as error:
+                if "schema cache" in str(error) or "p_gestion" in str(error):
+                    raise RuntimeError(
+                        "Supabase necesita la migración de gestión y semestre. "
+                        "Ejecuta backend/supabase/schema.sql en el SQL Editor."
+                    ) from error
+                raise
             if not filas:
                 raise RuntimeError("Supabase no devolvió la convocatoria creada.")
             return {**filas[0], "abierta": self._esta_abierta(inicio, fin)}
@@ -123,6 +163,8 @@ class ConvocatoriaRepository:
         convocatoria = {
             "id": str(uuid4()),
             "nombre": datos.nombre.strip(),
+            "gestion": datos.gestion,
+            "semestre": datos.semestre,
             "inicio": inicio,
             "fin": fin,
             "activa": True,

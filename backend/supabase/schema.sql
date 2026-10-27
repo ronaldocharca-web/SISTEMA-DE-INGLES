@@ -5,11 +5,24 @@ create table if not exists public.convocatorias (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   nombre text not null,
+  gestion integer not null default 2026,
+  semestre text not null default 'Segundo semestre',
   inicio timestamptz not null,
   fin timestamptz not null,
   activa boolean not null default true,
-  constraint convocatoria_intervalo_valido check (fin > inicio)
+  constraint convocatoria_intervalo_valido check (fin > inicio),
+  constraint convocatoria_semestre_valido check (semestre in ('Primer semestre', 'Segundo semestre'))
 );
+
+-- Migración para proyectos que ya tenían convocatorias creadas.
+alter table public.convocatorias add column if not exists gestion integer;
+alter table public.convocatorias add column if not exists semestre text;
+update public.convocatorias set gestion = coalesce(gestion, extract(year from inicio)::integer);
+update public.convocatorias set semestre = coalesce(semestre, 'Segundo semestre');
+alter table public.convocatorias alter column gestion set default 2026;
+alter table public.convocatorias alter column gestion set not null;
+alter table public.convocatorias alter column semestre set default 'Segundo semestre';
+alter table public.convocatorias alter column semestre set not null;
 
 create unique index if not exists convocatorias_una_activa
   on public.convocatorias (activa)
@@ -36,6 +49,30 @@ create table if not exists public.incidencias (
   archivo text not null,
   motivo text not null
 );
+
+-- Reserva y consume cada PDF de forma atómica. El hash no contiene el archivo
+-- ni permite reconstruirlo; solo funciona como huella para detectar reuso.
+create table if not exists public.pdf_usos (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  convocatoria_id uuid not null references public.convocatorias(id) on delete cascade,
+  hash_sha256 text not null check (length(hash_sha256) = 64),
+  token uuid not null unique,
+  estado text not null default 'reservado'
+    check (estado in ('reservado', 'registrado')),
+  reservado_hasta timestamptz,
+  ci text,
+  ru text,
+  unique (convocatoria_id, hash_sha256)
+);
+
+create unique index if not exists pdf_usos_convocatoria_ci_unique
+  on public.pdf_usos (convocatoria_id, ci)
+  where ci is not null and ci <> '';
+create unique index if not exists pdf_usos_convocatoria_ru_unique
+  on public.pdf_usos (convocatoria_id, ru)
+  where ru is not null and ru <> '';
 
 -- Migración segura para proyectos que ya tenían registros antes de incorporar
 -- convocatorias. Los datos anteriores quedan guardados como un período cerrado.
@@ -80,8 +117,11 @@ create unique index if not exists estudiantes_convocatoria_ru_unique
   on public.estudiantes (convocatoria_id, ru);
 
 -- Cierra la convocatoria anterior y crea una nueva en una sola transacción.
+drop function if exists public.create_exam_convocatoria(text, timestamptz, timestamptz);
 create or replace function public.create_exam_convocatoria(
   p_nombre text,
+  p_gestion integer,
+  p_semestre text,
   p_inicio timestamptz,
   p_fin timestamptz
 )
@@ -96,10 +136,16 @@ begin
   if p_fin <= p_inicio then
     raise exception 'La fecha final debe ser posterior a la inicial.';
   end if;
+  if p_gestion < 2000 or p_gestion > 2100 then
+    raise exception 'La gestión no es válida.';
+  end if;
+  if p_semestre not in ('Primer semestre', 'Segundo semestre') then
+    raise exception 'El semestre no es válido.';
+  end if;
 
   update public.convocatorias set activa = false where activa = true;
-  insert into public.convocatorias (nombre, inicio, fin, activa)
-  values (trim(p_nombre), p_inicio, p_fin, true)
+  insert into public.convocatorias (nombre, gestion, semestre, inicio, fin, activa)
+  values (trim(p_nombre), p_gestion, p_semestre, p_inicio, p_fin, true)
   returning * into nueva;
 
   return next nueva;
@@ -174,6 +220,7 @@ alter table public.incidencias enable row level security;
 alter table public.convocatorias enable row level security;
 alter table public.admin_profiles enable row level security;
 alter table public.admin_login_attempts enable row level security;
+alter table public.pdf_usos enable row level security;
 
 -- El backend usará una secret key en un entorno confiable y realizará
 -- las comprobaciones de administrador antes de consultar estas tablas.
@@ -182,13 +229,14 @@ grant all on public.incidencias to service_role;
 grant all on public.convocatorias to service_role;
 grant all on public.admin_profiles to service_role;
 grant all on public.admin_login_attempts to service_role;
+grant all on public.pdf_usos to service_role;
 
 revoke all on function public.register_admin_login_failure(text) from public;
 revoke all on function public.register_admin_login_failure(text) from anon;
 revoke all on function public.register_admin_login_failure(text) from authenticated;
 grant execute on function public.register_admin_login_failure(text) to service_role;
 
-revoke all on function public.create_exam_convocatoria(text, timestamptz, timestamptz) from public;
-revoke all on function public.create_exam_convocatoria(text, timestamptz, timestamptz) from anon;
-revoke all on function public.create_exam_convocatoria(text, timestamptz, timestamptz) from authenticated;
-grant execute on function public.create_exam_convocatoria(text, timestamptz, timestamptz) to service_role;
+revoke all on function public.create_exam_convocatoria(text, integer, text, timestamptz, timestamptz) from public;
+revoke all on function public.create_exam_convocatoria(text, integer, text, timestamptz, timestamptz) from anon;
+revoke all on function public.create_exam_convocatoria(text, integer, text, timestamptz, timestamptz) from authenticated;
+grant execute on function public.create_exam_convocatoria(text, integer, text, timestamptz, timestamptz) to service_role;

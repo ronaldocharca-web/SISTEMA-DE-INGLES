@@ -5,7 +5,7 @@ import unicodedata
 from app.repositories.rules_repository import RulesRepository
 from app.repositories.student_repository import StudentRepository
 from app.schemas.historial import ResultadoAnalisis
-from app.services.pdf_extractor import PdfExtractor
+from app.services.pdf_extractor import MULTIPLES_HISTORIALES, PdfExtractor
 
 
 def normalizar(valor: str) -> str:
@@ -22,6 +22,7 @@ class AnalisisService:
     def analizar(self, contenido: bytes, nombre_archivo: str) -> dict:
         registros, ci, nombre_estudiante, ru, advertencias, faltantes = self.extractor.extraer(contenido)
         if faltantes:
+            multiples_historiales = MULTIPLES_HISTORIALES in faltantes
             self.students.registrar_incidencia(
                 nombre_estudiante,
                 ci,
@@ -31,7 +32,11 @@ class AnalisisService:
             )
             return ResultadoAnalisis(
                 estado="PDF_NO_VALIDO",
-                mensaje="Este archivo no es válido. Solo se aceptan historiales del estudiante.",
+                mensaje=(
+                    "Este PDF no está permitido."
+                    if multiples_historiales
+                    else "Este archivo no es válido. Solo se aceptan historiales del estudiante."
+                ),
                 ci=ci,
                 nombre=nombre_estudiante,
                 ru=ru,

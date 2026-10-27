@@ -209,14 +209,30 @@ class StudentRepository:
                 return []
             return [dict(zip(self._incident_headers, [str(valor or "") for valor in fila])) for fila in libro["Incidencias"].iter_rows(min_row=2, values_only=True) if any(valor is not None and str(valor).strip() for valor in fila)]
 
-    def generar_excel(self, convocatoria_id: str | None = None) -> bytes:
+    def generar_excel(self, convocatoria_id: str | None = None, convocatoria: dict | None = None) -> bytes:
         """Genera en memoria el reporte de una convocatoria."""
         if not self.usa_supabase:
             self._crear_si_no_existe()
             libro = load_workbook(self.path)
         else:
             libro = Workbook()
-        estudiantes = libro.active
+        if "Convocatoria" in libro.sheetnames:
+            del libro["Convocatoria"]
+        hoja_convocatoria = libro.create_sheet("Convocatoria", 0)
+        hoja_convocatoria.append(["Campo", "Valor"])
+        datos_convocatoria = convocatoria or {}
+        hoja_convocatoria.append(["Nombre", datos_convocatoria.get("nombre", "")])
+        hoja_convocatoria.append(["Gestión", datos_convocatoria.get("gestion", "")])
+        hoja_convocatoria.append(["Semestre", datos_convocatoria.get("semestre", "")])
+        hoja_convocatoria.append(["Inicio", datos_convocatoria.get("inicio", "")])
+        hoja_convocatoria.append(["Fin", datos_convocatoria.get("fin", "")])
+        hoja_convocatoria.append(["Total estudiantes", len(self.listar(convocatoria_id))])
+        hoja_convocatoria.freeze_panes = "A2"
+        hoja_convocatoria.column_dimensions["A"].width = 22
+        hoja_convocatoria.column_dimensions["B"].width = 42
+        for celda in hoja_convocatoria[1]:
+            celda.font = celda.font.copy(bold=True)
+        estudiantes = libro["Estudiantes"] if "Estudiantes" in libro.sheetnames else libro.active
         estudiantes.title = "Estudiantes"
         if self.usa_supabase:
             estudiantes.append(self._headers)

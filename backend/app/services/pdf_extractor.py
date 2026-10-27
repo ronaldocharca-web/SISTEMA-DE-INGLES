@@ -22,6 +22,25 @@ PATRON_RU = re.compile(
     re.IGNORECASE,
 )
 
+MULTIPLES_HISTORIALES = "más de un historial académico"
+
+
+def _normalizar_identidad(valor: str) -> str:
+    texto = unicodedata.normalize("NFD", valor.upper())
+    texto = "".join(c for c in texto if unicodedata.category(c) != "Mn")
+    return " ".join(texto.split())
+
+
+def contiene_multiples_historiales(texto: str) -> bool:
+    cis = {coincidencia for coincidencia in PATRON_CI.findall(texto) if coincidencia}
+    rus = {coincidencia for coincidencia in PATRON_RU.findall(texto) if coincidencia}
+    nombres = {
+        _normalizar_identidad(coincidencia)
+        for coincidencia in PATRON_NOMBRE.findall(texto)
+        if coincidencia.strip()
+    }
+    return len(cis) > 1 or len(rus) > 1 or len(nombres) > 1
+
 
 class PdfExtractor:
     def extraer(self, contenido: bytes) -> tuple[list[dict[str, object]], str, str, str, list[str], list[str]]:
@@ -89,4 +108,6 @@ class PdfExtractor:
         faltantes = [descripcion for marcador, descripcion in marcadores.items() if marcador not in normalizado]
         if not registros:
             faltantes.append("filas de materias académicas")
+        if contiene_multiples_historiales(texto_completo):
+            faltantes.append(MULTIPLES_HISTORIALES)
         return registros, ci, nombre, ru, sorted(set(advertencias)), faltantes
