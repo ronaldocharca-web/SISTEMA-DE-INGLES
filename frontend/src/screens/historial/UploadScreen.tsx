@@ -42,7 +42,6 @@ export function UploadScreen({ cargando, error, onUpload }: Props) {
       {estado?.convocatoria && habilitada && (
         <ConvocatoriaBanner convocatoria={estado.convocatoria} />
       )}
-      {estado && !estado.convocatoria && <div className="alert error">{estado.mensaje}</div>}
       {errorFechas && <div className="alert error">{errorFechas}</div>}
       {!estado && !errorFechas && <p className="hint">Verificando convocatoria activa...</p>}
 
