@@ -118,9 +118,8 @@ class PdfUsageRepository:
         existente = self._obtener_por_hash(cliente, convocatoria_id, hash_sha256)
         if existente and existente.get("estado") == "registrado":
             return REGISTRADO, None
-        if existente and self._fecha(existente.get("reservado_hasta")):
-            if self._fecha(existente.get("reservado_hasta")) > ahora:
-                return EN_USO, None
+        if existente and self._reserva_esta_analizandose(existente, ahora):
+            return EN_USO, None
 
         if existente:
             actualizado = (
@@ -166,10 +165,9 @@ class PdfUsageRepository:
             )
             if existente and existente.get("estado") == "registrado":
                 return REGISTRADO, None
+            if existente and self._reserva_esta_analizandose(existente, ahora):
+                return EN_USO, None
             if existente:
-                fin = self._fecha(existente.get("reservado_hasta"))
-                if fin and fin > ahora:
-                    return EN_USO, None
                 existente.update(
                     token=token,
                     estado="reservado",
@@ -194,6 +192,17 @@ class PdfUsageRepository:
                 )
             self._guardar_local(filas)
             return RESERVADO, token
+
+    def _reserva_esta_analizandose(self, fila: dict, ahora: datetime) -> bool:
+        """Solo bloquea mientras se extrae el PDF, no mientras se llena el formulario.
+
+        Una reserva con CI/RU ya terminó el análisis. Si el navegador se
+        actualiza, se permite emitir un nuevo token para que el estudiante
+        pueda subir el mismo historial y continuar sin esperar 20 minutos.
+        """
+        fin = self._fecha(fila.get("reservado_hasta"))
+        tiene_identidad = bool(fila.get("ci") or fila.get("ru"))
+        return bool(fin and fin > ahora and not tiene_identidad)
 
     def asociar_identidad(self, token: str, convocatoria_id: str, ci: str, ru: str) -> str:
         ci_normalizado = self._normalizar_identificador(ci)
@@ -370,7 +379,7 @@ class PdfUsageRepository:
     def _obtener_por_hash(cliente, convocatoria_id: str, hash_sha256: str) -> dict | None:
         filas = (
             cliente.table("pdf_usos")
-            .select("token,estado,reservado_hasta")
+            .select("token,estado,reservado_hasta,ci,ru")
             .eq("convocatoria_id", convocatoria_id)
             .eq("hash_sha256", hash_sha256)
             .limit(1)

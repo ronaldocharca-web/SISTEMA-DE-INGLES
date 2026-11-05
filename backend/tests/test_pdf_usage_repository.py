@@ -50,3 +50,23 @@ class PdfUsageRepositoryTests(unittest.TestCase):
 
         self.assertEqual(nuevo_estado, REGISTRADO)
         self.assertIsNone(nuevo_token)
+
+    def test_permita_reanalizar_pdf_pendiente_despues_de_refrescar(self):
+        estado, token_original = self.repository.reservar(
+            b"pdf-pendiente", self.convocatoria_id
+        )
+        self.assertEqual(estado, RESERVADO)
+        self.assertEqual(
+            self.repository.asociar_identidad(
+                token_original, self.convocatoria_id, "1234567", "111111"
+            ),
+            RESERVADO,
+        )
+
+        nuevo_estado, nuevo_token = self.repository.reservar(
+            b"pdf-pendiente", self.convocatoria_id
+        )
+
+        self.assertEqual(nuevo_estado, RESERVADO)
+        self.assertIsNotNone(nuevo_token)
+        self.assertNotEqual(nuevo_token, token_original)
