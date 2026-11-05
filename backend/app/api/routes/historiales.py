@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, Header, HTTPException, UploadFile
 from uuid import UUID
 
 from app.repositories.convocatoria_repository import (
@@ -21,7 +21,10 @@ pdf_usage_repository = PdfUsageRepository()
 
 
 @router.post("/analizar")
-async def analizar_historial(archivo: UploadFile = File(...)):
+async def analizar_historial(
+    archivo: UploadFile = File(...),
+    x_pdf_reservation: str | None = Header(default=None),
+):
     nombre = archivo.filename or "archivo"
     if not nombre.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Solo se aceptan archivos PDF.")
@@ -43,6 +46,7 @@ async def analizar_historial(archivo: UploadFile = File(...)):
     estado_reserva, token = pdf_usage_repository.reservar(
         contenido,
         convocatoria["id"],
+        x_pdf_reservation,
     )
     if estado_reserva == EN_USO:
         raise HTTPException(status_code=409, detail="El PDF está usándose.")

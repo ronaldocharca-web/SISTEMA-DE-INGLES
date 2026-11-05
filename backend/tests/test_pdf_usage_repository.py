@@ -51,7 +51,7 @@ class PdfUsageRepositoryTests(unittest.TestCase):
         self.assertEqual(nuevo_estado, REGISTRADO)
         self.assertIsNone(nuevo_token)
 
-    def test_permita_reanalizar_pdf_pendiente_despues_de_refrescar(self):
+    def test_mismo_navegador_puede_reanalizar_pdf_pendiente_despues_de_refrescar(self):
         estado, token_original = self.repository.reservar(
             b"pdf-pendiente", self.convocatoria_id
         )
@@ -65,8 +65,27 @@ class PdfUsageRepositoryTests(unittest.TestCase):
 
         nuevo_estado, nuevo_token = self.repository.reservar(
             b"pdf-pendiente", self.convocatoria_id
+            , token_original
         )
 
         self.assertEqual(nuevo_estado, RESERVADO)
-        self.assertIsNotNone(nuevo_token)
-        self.assertNotEqual(nuevo_token, token_original)
+        self.assertEqual(nuevo_token, token_original)
+
+    def test_otra_laptop_no_puede_reutilizar_pdf_pendiente(self):
+        estado, token_original = self.repository.reservar(
+            b"pdf-compartido", self.convocatoria_id
+        )
+        self.assertEqual(estado, RESERVADO)
+        self.assertEqual(
+            self.repository.asociar_identidad(
+                token_original, self.convocatoria_id, "1234567", "111111"
+            ),
+            RESERVADO,
+        )
+
+        estado_ajeno, token_ajeno = self.repository.reservar(
+            b"pdf-compartido", self.convocatoria_id
+        )
+
+        self.assertEqual(estado_ajeno, EN_USO)
+        self.assertIsNone(token_ajeno)

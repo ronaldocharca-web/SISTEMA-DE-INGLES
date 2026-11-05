@@ -4,12 +4,16 @@ import { RegistroEstudiante, RegistroEstudianteResponse } from "@/models/student
 import { API_URL, leerJson, solicitar } from "@/services/apiClient";
 
 
-export async function analizarHistorial(archivo: File): Promise<ResultadoAnalisis> {
+export async function analizarHistorial(
+  archivo: File,
+  tokenReserva?: string,
+): Promise<ResultadoAnalisis> {
   const formulario = new FormData();
   formulario.append("archivo", archivo);
   const respuesta = await solicitar(`${API_URL}/historiales/analizar`, {
     method: "POST",
     body: formulario,
+    headers: tokenReserva ? { "X-PDF-Reservation": tokenReserva } : undefined,
   });
   return leerJson<ResultadoAnalisis>(respuesta, "No fue posible analizar el PDF.");
 }

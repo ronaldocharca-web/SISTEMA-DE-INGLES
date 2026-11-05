@@ -32,6 +32,7 @@ export function CumpleScreen({ resultado, onBack }: Props) {
   }
 
   function volver() {
+    window.sessionStorage.removeItem("sistema-ingles-reserva-pdf");
     void liberarReservaPdf(resultado.pdf_token).finally(onBack);
   }
 

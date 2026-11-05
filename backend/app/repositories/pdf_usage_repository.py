@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import secrets
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from threading import Lock
@@ -89,14 +90,26 @@ class PdfUsageRepository:
             encoding="utf-8",
         )
 
-    def reservar(self, contenido: bytes, convocatoria_id: str) -> tuple[str, str | None]:
+    def reservar(
+        self,
+        contenido: bytes,
+        convocatoria_id: str,
+        token_anterior: str | None = None,
+    ) -> tuple[str, str | None]:
         hash_sha256 = self.calcular_hash(contenido)
         token = str(uuid4())
         ahora = datetime.now(timezone.utc)
         reservado_hasta = ahora + self._duracion_reserva
         cliente = self.supabase
         if cliente is None:
-            return self._reservar_local(hash_sha256, token, convocatoria_id, ahora, reservado_hasta)
+            return self._reservar_local(
+                hash_sha256,
+                token,
+                convocatoria_id,
+                ahora,
+                reservado_hasta,
+                token_anterior,
+            )
 
         fila = {
             "convocatoria_id": convocatoria_id,
@@ -111,15 +124,30 @@ class PdfUsageRepository:
         except Exception as error:
             if self._es_tabla_faltante(error):
                 self._activar_fallback(error)
-                return self._reservar_local(hash_sha256, token, convocatoria_id, ahora, reservado_hasta)
+                return self._reservar_local(
+                    hash_sha256,
+                    token,
+                    convocatoria_id,
+                    ahora,
+                    reservado_hasta,
+                    token_anterior,
+                )
             if not self._es_duplicado(error):
                 raise
 
         existente = self._obtener_por_hash(cliente, convocatoria_id, hash_sha256)
         if existente and existente.get("estado") == "registrado":
             return REGISTRADO, None
-        if existente and self._reserva_esta_analizandose(existente, ahora):
-            return EN_USO, None
+        if existente:
+            fin = self._fecha(existente.get("reservado_hasta"))
+            if fin and fin > ahora:
+                # Solo el mismo navegador conoce este UUID y puede recuperar
+                # su propia reserva después de actualizar la página.
+                if token_anterior and secrets.compare_digest(
+                    str(existente["token"]), token_anterior
+                ):
+                    return RESERVADO, str(existente["token"])
+                return EN_USO, None
 
         if existente:
             actualizado = (
@@ -151,6 +179,7 @@ class PdfUsageRepository:
         convocatoria_id: str,
         ahora: datetime,
         reservado_hasta: datetime,
+        token_anterior: str | None = None,
     ) -> tuple[str, str | None]:
         with self._lock:
             filas = self._cargar_local()
@@ -165,9 +194,14 @@ class PdfUsageRepository:
             )
             if existente and existente.get("estado") == "registrado":
                 return REGISTRADO, None
-            if existente and self._reserva_esta_analizandose(existente, ahora):
-                return EN_USO, None
             if existente:
+                fin = self._fecha(existente.get("reservado_hasta"))
+                if fin and fin > ahora:
+                    if token_anterior and secrets.compare_digest(
+                        str(existente["token"]), token_anterior
+                    ):
+                        return RESERVADO, str(existente["token"])
+                    return EN_USO, None
                 existente.update(
                     token=token,
                     estado="reservado",
@@ -192,17 +226,6 @@ class PdfUsageRepository:
                 )
             self._guardar_local(filas)
             return RESERVADO, token
-
-    def _reserva_esta_analizandose(self, fila: dict, ahora: datetime) -> bool:
-        """Solo bloquea mientras se extrae el PDF, no mientras se llena el formulario.
-
-        Una reserva con CI/RU ya terminó el análisis. Si el navegador se
-        actualiza, se permite emitir un nuevo token para que el estudiante
-        pueda subir el mismo historial y continuar sin esperar 20 minutos.
-        """
-        fin = self._fecha(fila.get("reservado_hasta"))
-        tiene_identidad = bool(fila.get("ci") or fila.get("ru"))
-        return bool(fin and fin > ahora and not tiene_identidad)
 
     def asociar_identidad(self, token: str, convocatoria_id: str, ci: str, ru: str) -> str:
         ci_normalizado = self._normalizar_identificador(ci)
@@ -379,7 +402,7 @@ class PdfUsageRepository:
     def _obtener_por_hash(cliente, convocatoria_id: str, hash_sha256: str) -> dict | None:
         filas = (
             cliente.table("pdf_usos")
-            .select("token,estado,reservado_hasta,ci,ru")
+            .select("token,estado,reservado_hasta")
             .eq("convocatoria_id", convocatoria_id)
             .eq("hash_sha256", hash_sha256)
             .limit(1)
