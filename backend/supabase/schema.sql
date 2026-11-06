@@ -240,3 +240,131 @@ revoke all on function public.create_exam_convocatoria(text, integer, text, time
 revoke all on function public.create_exam_convocatoria(text, integer, text, timestamptz, timestamptz) from anon;
 revoke all on function public.create_exam_convocatoria(text, integer, text, timestamptz, timestamptz) from authenticated;
 grant execute on function public.create_exam_convocatoria(text, integer, text, timestamptz, timestamptz) to service_role;
+
+-- ================================================================
+-- Módulo independiente de adición de materia
+-- ================================================================
+create table if not exists public.convocatorias_adicion (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  nombre text not null,
+  gestion integer not null,
+  semestre text not null check (semestre in ('Primer semestre', 'Segundo semestre')),
+  inicio timestamptz not null,
+  fin timestamptz not null,
+  activa boolean not null default true,
+  constraint convocatoria_adicion_intervalo_valido check (fin > inicio)
+);
+
+create unique index if not exists convocatorias_adicion_una_activa
+  on public.convocatorias_adicion (activa) where activa = true;
+
+create table if not exists public.configuracion_adicion (
+  id smallint primary key default 1 check (id = 1),
+  promedio_minimo numeric(5,2) not null default 75 check (promedio_minimo between 0 and 100),
+  updated_at timestamptz not null default now()
+);
+insert into public.configuracion_adicion (id, promedio_minimo)
+values (1, 75) on conflict (id) do nothing;
+
+create table if not exists public.solicitudes_adicion (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  convocatoria_id uuid not null references public.convocatorias_adicion(id),
+  nombre text not null,
+  ci text not null,
+  ru text not null,
+  correo text not null,
+  celular text not null,
+  materia_adicionar text not null,
+  sigla_materia text not null,
+  nombre_materia text not null,
+  semestre_materia integer not null check (semestre_materia between 1 and 10),
+  numero_materia_total integer not null check (numero_materia_total between 7 and 8),
+  promedio numeric(5,2) not null,
+  unique (convocatoria_id, ci),
+  unique (convocatoria_id, ru)
+);
+
+-- Migración para separar la sigla y el nombre en proyectos existentes.
+alter table public.solicitudes_adicion add column if not exists sigla_materia text;
+alter table public.solicitudes_adicion add column if not exists nombre_materia text;
+alter table public.solicitudes_adicion add column if not exists semestre_materia integer;
+alter table public.solicitudes_adicion add column if not exists numero_materia_total integer;
+update public.solicitudes_adicion
+set
+  sigla_materia = coalesce(sigla_materia, ''),
+  nombre_materia = coalesce(nombre_materia, materia_adicionar)
+where sigla_materia is null or nombre_materia is null;
+update public.solicitudes_adicion
+set
+  sigla_materia = trim(split_part(materia_adicionar, ' - ', 1)),
+  nombre_materia = trim(substring(materia_adicionar from position(' - ' in materia_adicionar) + 3))
+where sigla_materia = '' and position(' - ' in materia_adicionar) > 0;
+alter table public.solicitudes_adicion alter column sigla_materia set not null;
+alter table public.solicitudes_adicion alter column nombre_materia set not null;
+
+create table if not exists public.incidencias_adicion (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  convocatoria_id uuid references public.convocatorias_adicion(id),
+  nombre text,
+  ci text,
+  ru text,
+  archivo text not null,
+  motivo text not null
+);
+
+create table if not exists public.pdf_usos_adicion (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  convocatoria_id uuid not null references public.convocatorias_adicion(id) on delete cascade,
+  hash_sha256 text not null check (length(hash_sha256) = 64),
+  token uuid not null unique,
+  estado text not null default 'reservado' check (estado in ('reservado', 'registrado')),
+  reservado_hasta timestamptz,
+  ci text,
+  ru text,
+  contexto jsonb not null default '{}'::jsonb,
+  unique (convocatoria_id, hash_sha256)
+);
+
+create unique index if not exists pdf_usos_adicion_ci_unique
+  on public.pdf_usos_adicion (convocatoria_id, ci) where ci is not null and ci <> '';
+create unique index if not exists pdf_usos_adicion_ru_unique
+  on public.pdf_usos_adicion (convocatoria_id, ru) where ru is not null and ru <> '';
+
+create or replace function public.create_adicion_convocatoria(
+  p_nombre text, p_gestion integer, p_semestre text,
+  p_inicio timestamptz, p_fin timestamptz
+)
+returns setof public.convocatorias_adicion
+language plpgsql security definer set search_path = public
+as $$
+declare nueva public.convocatorias_adicion;
+begin
+  if p_fin <= p_inicio then raise exception 'La fecha final debe ser posterior a la inicial.'; end if;
+  if p_gestion < 2000 or p_gestion > 2100 then raise exception 'La gestión no es válida.'; end if;
+  if p_semestre not in ('Primer semestre', 'Segundo semestre') then raise exception 'El semestre no es válido.'; end if;
+  update public.convocatorias_adicion set activa = false where activa = true;
+  insert into public.convocatorias_adicion (nombre, gestion, semestre, inicio, fin, activa)
+  values (trim(p_nombre), p_gestion, p_semestre, p_inicio, p_fin, true)
+  returning * into nueva;
+  return next nueva;
+end;
+$$;
+
+alter table public.convocatorias_adicion enable row level security;
+alter table public.configuracion_adicion enable row level security;
+alter table public.solicitudes_adicion enable row level security;
+alter table public.incidencias_adicion enable row level security;
+alter table public.pdf_usos_adicion enable row level security;
+
+grant all on public.convocatorias_adicion to service_role;
+grant all on public.configuracion_adicion to service_role;
+grant all on public.solicitudes_adicion to service_role;
+grant all on public.incidencias_adicion to service_role;
+grant all on public.pdf_usos_adicion to service_role;
+revoke all on function public.create_adicion_convocatoria(text, integer, text, timestamptz, timestamptz) from public, anon, authenticated;
+grant execute on function public.create_adicion_convocatoria(text, integer, text, timestamptz, timestamptz) to service_role;

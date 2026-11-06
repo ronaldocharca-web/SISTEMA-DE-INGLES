@@ -20,7 +20,7 @@ class AnalisisService:
         self.students = StudentRepository()
 
     def analizar(self, contenido: bytes, nombre_archivo: str) -> dict:
-        registros, ci, nombre_estudiante, ru, advertencias, faltantes = self.extractor.extraer(contenido)
+        registros, ci, nombre_estudiante, ru, advertencias, faltantes, _promedio_general = self.extractor.extraer(contenido)
         if faltantes:
             multiples_historiales = MULTIPLES_HISTORIALES in faltantes
             self.students.registrar_incidencia(

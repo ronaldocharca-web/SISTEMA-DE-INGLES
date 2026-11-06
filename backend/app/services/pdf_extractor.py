@@ -21,6 +21,9 @@ PATRON_RU = re.compile(
     r"\b(?:Reg\.?\s*\.?\s*Univ\.?|R\.\s*U\.?|RU)\s*[:#-]?\s*(\d{3,})",
     re.IGNORECASE,
 )
+PATRON_PROMEDIO_GENERAL = re.compile(
+    r"PROM\s*\.?\s*GRAL\s*\.?\s*[:=]?\s*(\d{1,3}(?:[.,]\d{1,2})?)",
+)
 
 MULTIPLES_HISTORIALES = "más de un historial académico"
 
@@ -43,7 +46,7 @@ def contiene_multiples_historiales(texto: str) -> bool:
 
 
 class PdfExtractor:
-    def extraer(self, contenido: bytes) -> tuple[list[dict[str, object]], str, str, str, list[str], list[str]]:
+    def extraer(self, contenido: bytes) -> tuple[list[dict[str, object]], str, str, str, list[str], list[str], float | None]:
         registros: list[dict[str, object]] = []
         advertencias: list[str] = []
         gestion = ""
@@ -110,4 +113,8 @@ class PdfExtractor:
             faltantes.append("filas de materias académicas")
         if contiene_multiples_historiales(texto_completo):
             faltantes.append(MULTIPLES_HISTORIALES)
-        return registros, ci, nombre, ru, sorted(set(advertencias)), faltantes
+        promedios = PATRON_PROMEDIO_GENERAL.findall(texto_completo)
+        promedio_general = float(promedios[-1].replace(",", ".")) if promedios else None
+        if promedio_general is not None and not 0 <= promedio_general <= 100:
+            promedio_general = None
+        return registros, ci, nombre, ru, sorted(set(advertencias)), faltantes, promedio_general

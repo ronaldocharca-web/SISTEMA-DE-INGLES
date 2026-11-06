@@ -27,8 +27,10 @@ class PdfUsageRepository:
     _lock = Lock()
     _duracion_reserva = timedelta(minutes=20)
 
-    def __init__(self) -> None:
-        self.path = Path(__file__).resolve().parents[2] / "data" / "pdf_usos.json"
+    def __init__(self, scope: str = "ingles") -> None:
+        self.table = "pdf_usos" if scope == "ingles" else f"pdf_usos_{scope}"
+        filename = "pdf_usos.json" if scope == "ingles" else f"pdf_usos_{scope}.json"
+        self.path = Path(__file__).resolve().parents[2] / "data" / filename
         self._usar_fallback_local = False
 
     @property
@@ -59,10 +61,9 @@ class PdfUsageRepository:
         texto = str(error).lower()
         return "23505" in texto or "duplicate" in texto or "unique" in texto
 
-    @staticmethod
-    def _es_tabla_faltante(error: Exception) -> bool:
+    def _es_tabla_faltante(self, error: Exception) -> bool:
         texto = str(error).lower()
-        return "pdf_usos" in texto and any(
+        return self.table in texto and any(
             marca in texto
             for marca in ("does not exist", "schema cache", "could not find", "relation")
         )
@@ -70,7 +71,8 @@ class PdfUsageRepository:
     def _activar_fallback(self, error: Exception) -> None:
         self._usar_fallback_local = True
         logger.warning(
-            "La tabla pdf_usos todavía no existe en Supabase; se usará el control local: %s",
+            "La tabla %s todavía no existe en Supabase; se usará el control local: %s",
+            self.table,
             error,
         )
 
@@ -119,7 +121,7 @@ class PdfUsageRepository:
             "reservado_hasta": reservado_hasta.isoformat(),
         }
         try:
-            cliente.table("pdf_usos").insert(fila).execute()
+            cliente.table(self.table).insert(fila).execute()
             return RESERVADO, token
         except Exception as error:
             if self._es_tabla_faltante(error):
@@ -151,7 +153,7 @@ class PdfUsageRepository:
 
         if existente:
             actualizado = (
-                cliente.table("pdf_usos")
+                cliente.table(self.table)
                 .update(
                     {
                         "token": token,
@@ -236,7 +238,7 @@ class PdfUsageRepository:
 
         try:
             actualizado = (
-                cliente.table("pdf_usos")
+                cliente.table(self.table)
                 .update(
                     {
                         "ci": ci_normalizado or None,
@@ -302,7 +304,7 @@ class PdfUsageRepository:
             return self._validar_reserva_local(token, convocatoria_id, ci, ru)
         try:
             filas = (
-                cliente.table("pdf_usos")
+                cliente.table(self.table)
                 .select("estado,reservado_hasta,ci,ru")
                 .eq("token", token)
                 .eq("convocatoria_id", convocatoria_id)
@@ -358,7 +360,7 @@ class PdfUsageRepository:
             return
         try:
             (
-                cliente.table("pdf_usos")
+                cliente.table(self.table)
                 .update({"estado": "registrado", "reservado_hasta": None, "updated_at": ahora})
                 .eq("token", token)
                 .execute()
@@ -369,6 +371,41 @@ class PdfUsageRepository:
                 self.marcar_registrado(token)
                 return
             raise
+
+    def guardar_contexto(self, token: str, contexto: dict) -> None:
+        """Guarda cálculos del servidor asociados a una reserva válida."""
+        cliente = self.supabase
+        if cliente is None:
+            with self._lock:
+                filas = self._cargar_local()
+                fila = next((item for item in filas if item.get("token") == token), None)
+                if fila:
+                    fila["contexto"] = contexto
+                    self._guardar_local(filas)
+            return
+        try:
+            cliente.table(self.table).update({"contexto": contexto}).eq("token", token).execute()
+        except Exception as error:
+            if self._es_tabla_faltante(error):
+                self._activar_fallback(error)
+                self.guardar_contexto(token, contexto)
+                return
+            raise
+
+    def obtener_contexto(self, token: str) -> dict:
+        cliente = self.supabase
+        if cliente is None:
+            with self._lock:
+                fila = next((item for item in self._cargar_local() if item.get("token") == token), None)
+                return dict(fila.get("contexto") or {}) if fila else {}
+        try:
+            filas = cliente.table(self.table).select("contexto").eq("token", token).limit(1).execute().data or []
+        except Exception as error:
+            if self._es_tabla_faltante(error):
+                self._activar_fallback(error)
+                return self.obtener_contexto(token)
+            raise
+        return dict(filas[0].get("contexto") or {}) if filas else {}
 
     def liberar(self, token: str) -> None:
         cliente = self.supabase
@@ -385,7 +422,7 @@ class PdfUsageRepository:
             return
         try:
             (
-                cliente.table("pdf_usos")
+                cliente.table(self.table)
                 .delete()
                 .eq("token", token)
                 .eq("estado", "reservado")
@@ -398,10 +435,9 @@ class PdfUsageRepository:
                 return
             raise
 
-    @staticmethod
-    def _obtener_por_hash(cliente, convocatoria_id: str, hash_sha256: str) -> dict | None:
+    def _obtener_por_hash(self, cliente, convocatoria_id: str, hash_sha256: str) -> dict | None:
         filas = (
-            cliente.table("pdf_usos")
+            cliente.table(self.table)
             .select("token,estado,reservado_hasta")
             .eq("convocatoria_id", convocatoria_id)
             .eq("hash_sha256", hash_sha256)
@@ -412,13 +448,12 @@ class PdfUsageRepository:
         )
         return filas[0] if filas else None
 
-    @staticmethod
-    def _buscar_identidad(cliente, convocatoria_id: str, ci: str, ru: str) -> dict | None:
+    def _buscar_identidad(self, cliente, convocatoria_id: str, ci: str, ru: str) -> dict | None:
         for columna, valor in (("ci", ci), ("ru", ru)):
             if not valor:
                 continue
             filas = (
-                cliente.table("pdf_usos")
+                cliente.table(self.table)
                 .select("estado")
                 .eq("convocatoria_id", convocatoria_id)
                 .eq(columna, valor)

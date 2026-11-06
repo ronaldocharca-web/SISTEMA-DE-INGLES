@@ -19,13 +19,33 @@ class ConvocatoriaRepository:
 
     _lock = Lock()
 
-    def __init__(self) -> None:
-        self.path = Path(__file__).resolve().parents[2] / "data" / "convocatoria.json"
+    def __init__(self, scope: str = "ingles") -> None:
+        self.scope = scope
+        self.table = "convocatorias" if scope == "ingles" else f"convocatorias_{scope}"
+        self.create_rpc = "create_exam_convocatoria" if scope == "ingles" else f"create_{scope}_convocatoria"
+        filename = "convocatoria.json" if scope == "ingles" else f"convocatoria_{scope}.json"
+        self.path = Path(__file__).resolve().parents[2] / "data" / filename
+        self._supabase_verificado = scope == "ingles"
+        self._usar_fallback_local = False
 
     @property
     def supabase(self):
         """Obtiene un cliente aislado para evitar reutilizar sockets entre solicitudes."""
-        return get_supabase_client()
+        if self._usar_fallback_local:
+            return None
+        cliente = get_supabase_client()
+        if cliente is None or self._supabase_verificado:
+            return cliente
+        try:
+            cliente.table(self.table).select("id").limit(1).execute()
+            self._supabase_verificado = True
+        except Exception as error:
+            texto = str(error).lower()
+            if any(marca in texto for marca in ("does not exist", "schema cache", "could not find", "relation")):
+                self._usar_fallback_local = True
+                return None
+            raise
+        return cliente
 
     @staticmethod
     def _fecha(valor: str | datetime) -> datetime:
@@ -41,7 +61,7 @@ class ConvocatoriaRepository:
         if self.supabase is not None:
             try:
                 filas = (
-                    self.supabase.table("convocatorias")
+                    self.supabase.table(self.table)
                     .select("id,nombre,gestion,semestre,inicio,fin,activa")
                     .eq("activa", True)
                     .order("created_at", desc=True)
@@ -53,7 +73,7 @@ class ConvocatoriaRepository:
                 if "gestion" not in str(error) and "semestre" not in str(error):
                     raise
                 filas = (
-                    self.supabase.table("convocatorias")
+                    self.supabase.table(self.table)
                     .select("id,nombre,inicio,fin,activa")
                     .eq("activa", True)
                     .order("created_at", desc=True)
@@ -98,7 +118,7 @@ class ConvocatoriaRepository:
             return []
         try:
             filas = (
-                self.supabase.table("convocatorias")
+                self.supabase.table(self.table)
                 .select("id,nombre,gestion,semestre,inicio,fin,activa,created_at")
                 .eq("activa", False)
                 .order("created_at", desc=True)
@@ -110,7 +130,7 @@ class ConvocatoriaRepository:
             if "gestion" not in str(error) and "semestre" not in str(error):
                 raise
             filas = (
-                self.supabase.table("convocatorias")
+                self.supabase.table(self.table)
                 .select("id,nombre,inicio,fin,activa,created_at")
                 .eq("activa", False)
                 .order("created_at", desc=True)
@@ -137,7 +157,7 @@ class ConvocatoriaRepository:
             try:
                 filas = (
                     self.supabase.rpc(
-                        "create_exam_convocatoria",
+                        self.create_rpc,
                         {
                             "p_nombre": datos.nombre.strip(),
                             "p_gestion": datos.gestion,
@@ -190,7 +210,7 @@ class ConvocatoriaRepository:
 
         if self.supabase is not None:
             filas = (
-                self.supabase.table("convocatorias")
+                self.supabase.table(self.table)
                 .update({"fin": fin.isoformat()})
                 .eq("id", convocatoria["id"])
                 .execute()

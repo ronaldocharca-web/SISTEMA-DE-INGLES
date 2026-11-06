@@ -2,6 +2,7 @@ import unittest
 
 from app.services.pdf_extractor import (
     PATRON_CI,
+    PATRON_PROMEDIO_GENERAL,
     PATRON_RU,
     contiene_multiples_historiales,
 )
@@ -21,6 +22,13 @@ class PdfPatternTests(unittest.TestCase):
             PATRON_RU.search("Reg. Univ.: 1907963").group(1), "1907963"
         )
         self.assertIsNone(PATRON_RU.search("TUR-401 Inglés Técnico Turístico I"))
+
+    def test_detecta_promedio_general_oficial(self):
+        texto = "INSCRITAS: 45 APROBADAS: 45 PROM.GRAL.: 72.29 PROM.APROB.: 72.29"
+        self.assertEqual(PATRON_PROMEDIO_GENERAL.search(texto).group(1), "72.29")
+        self.assertEqual(PATRON_PROMEDIO_GENERAL.search("PROM GRAL: 68,50").group(1), "68,50")
+        self.assertIsNone(PATRON_PROMEDIO_GENERAL.search("prom.gral.: 99.00"))
+        self.assertIsNone(PATRON_PROMEDIO_GENERAL.search("Promedio gral.: 88.00"))
 
     def test_detecta_dos_historiales_con_identidades_distintas(self):
         texto = """

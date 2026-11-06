@@ -2,6 +2,28 @@
 
 Sistema para la carrera de Turismo que permite verificar, a partir del historial académico de un estudiante, si ya cursó o aprobó materias o niveles de inglés.
 
+## Módulo de adición de materia
+
+La aplicación incluye una portada con dos accesos independientes: **Sistema de
+Inglés** y **Adición de Materia**. Ambos comparten las mismas credenciales del
+administrador, pero mantienen convocatorias y registros separados.
+
+Para solicitar la adición de una materia, el estudiante debe subir su historial
+académico. El módulo comprueba que no tenga materias reprobadas, que no tenga
+materias abandonadas y que alcance el promedio mínimo configurado por el
+administrador (75 por defecto). Cuando cumple, registra sus datos y la materia
+que desea adicionar; cuando no cumple, muestra todas las razones detectadas.
+
+El panel administrativo de adición permite crear convocatorias con fecha de
+inicio y cierre, modificar el promedio mínimo, consultar solicitudes actuales e
+históricas y descargar un Excel.
+
+Para habilitar las tablas del módulo en un proyecto Supabase ya existente,
+vuelve a ejecutar `backend/supabase/schema.sql` en el SQL Editor. El script es
+idempotente. En desarrollo, si esas tablas aún no existen, el backend utiliza
+archivos locales como respaldo; en producción se recomienda aplicar siempre la
+migración para conservar los datos entre instancias.
+
 > **Estado actual:** el proyecto cuenta con un backend FastAPI y un frontend Next.js para analizar el historial académico directamente desde la aplicación.
 
 ## Objetivo funcional

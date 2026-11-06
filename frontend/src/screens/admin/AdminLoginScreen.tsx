@@ -55,7 +55,7 @@ export function AdminLoginScreen({ onSuccess, onBack }: Props) {
       </form>
 
       <button className="secondary" type="button" onClick={onBack} style={{ marginTop: "14px", width: "100%", marginLeft: 0 }}>
-        ← Volver al verificador
+        ← Volver al menú principal
       </button>
     </section>
   );

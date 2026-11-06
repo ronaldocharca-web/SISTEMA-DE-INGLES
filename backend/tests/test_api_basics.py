@@ -35,6 +35,18 @@ class ApiBasicsTests(unittest.TestCase):
             "/api/v1/admin/estudiantes/exportar",
             "/api/v1/admin/estudiantes/exportar-word",
             "/api/v1/admin/estudiantes/exportar-pdf",
+            "/api/v1/adicion/inscripciones/estado",
+            "/api/v1/adicion/historiales/analizar",
+            "/api/v1/adicion/solicitudes",
+            "/api/v1/admin/adicion/resumen",
+            "/api/v1/admin/adicion/convocatoria",
+            "/api/v1/admin/adicion/configuracion",
+            "/api/v1/admin/adicion/exportar",
+            "/api/v1/admin/adicion/exportar-word",
+            "/api/v1/admin/adicion/exportar-pdf",
+            "/api/v1/admin/adicion/convocatorias/{convocatoria_id}/exportar",
+            "/api/v1/admin/adicion/convocatorias/{convocatoria_id}/exportar-word",
+            "/api/v1/admin/adicion/convocatorias/{convocatoria_id}/exportar-pdf",
         }
 
         self.assertTrue(esperadas.issubset(rutas))

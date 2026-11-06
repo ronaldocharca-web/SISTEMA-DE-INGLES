@@ -216,6 +216,7 @@ class StudentRepository:
             libro = load_workbook(self.path)
         else:
             libro = Workbook()
+            libro.active.title = "Estudiantes"
         if "Convocatoria" in libro.sheetnames:
             del libro["Convocatoria"]
         hoja_convocatoria = libro.create_sheet("Convocatoria", 0)
@@ -232,8 +233,7 @@ class StudentRepository:
         hoja_convocatoria.column_dimensions["B"].width = 42
         for celda in hoja_convocatoria[1]:
             celda.font = celda.font.copy(bold=True)
-        estudiantes = libro["Estudiantes"] if "Estudiantes" in libro.sheetnames else libro.active
-        estudiantes.title = "Estudiantes"
+        estudiantes = libro["Estudiantes"]
         if self.usa_supabase:
             estudiantes.append(self._headers)
             for fila in self.listar(convocatoria_id):
@@ -244,6 +244,10 @@ class StudentRepository:
                 incidencias.append(
                     [fila[campo] for campo in self._incident_headers]
                 )
+        if "Sheet" in libro.sheetnames:
+            hoja_vacia = libro["Sheet"]
+            if hoja_vacia.max_row == 1 and hoja_vacia.max_column == 1 and hoja_vacia["A1"].value is None:
+                del libro["Sheet"]
         salida = BytesIO()
         libro.save(salida)
         salida.seek(0)

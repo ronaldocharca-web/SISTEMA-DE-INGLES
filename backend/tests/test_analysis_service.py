@@ -33,7 +33,7 @@ def crear_servicio(respuesta_extractor, inscrito=False):
 
 class AnalisisServiceTests(unittest.TestCase):
     def test_pdf_invalido_registra_incidencia(self):
-        servicio = crear_servicio(([], "", "", "", [], ["título HISTORIAL ACADEMICO"]))
+        servicio = crear_servicio(([], "", "", "", [], ["título HISTORIAL ACADEMICO"], None))
 
         resultado = servicio.analizar(b"contenido", "archivo.pdf")
 
@@ -42,7 +42,7 @@ class AnalisisServiceTests(unittest.TestCase):
 
     def test_estudiante_ya_inscrito_no_llega_al_formulario(self):
         filas = [{"sigla": "TUR 100", "materia": "Turismo", "numero": 1}]
-        servicio = crear_servicio((filas, "10921260", "Ana", "1907963", [], []), inscrito=True)
+        servicio = crear_servicio((filas, "10921260", "Ana", "1907963", [], [], None), inscrito=True)
 
         resultado = servicio.analizar(b"contenido", "historial.pdf")
 
@@ -54,7 +54,7 @@ class AnalisisServiceTests(unittest.TestCase):
             "nota": 80, "ci": "10921260", "gestion": "2026", "periodo": "PRIMERO",
             "paralelo": "A", "folio": "", "libro": "", "observacion": "APROBADO", "docente": "",
         }]
-        servicio = crear_servicio((filas, "10921260", "Ana", "1907963", [], []))
+        servicio = crear_servicio((filas, "10921260", "Ana", "1907963", [], [], None))
 
         resultado = servicio.analizar(b"contenido", "historial.pdf")
 
@@ -63,14 +63,14 @@ class AnalisisServiceTests(unittest.TestCase):
 
     def test_historial_sin_ingles_habilita_registro(self):
         filas = [{"sigla": "TUR 100", "materia": "Turismo", "numero": 1}]
-        servicio = crear_servicio((filas, "10921260", "Ana", "1907963", [], []))
+        servicio = crear_servicio((filas, "10921260", "Ana", "1907963", [], [], None))
 
         resultado = servicio.analizar(b"contenido", "historial.pdf")
 
         self.assertEqual(resultado["estado"], "PUEDE_TOMAR")
 
     def test_pdf_con_varios_historiales_muestra_mensaje_especifico(self):
-        servicio = crear_servicio(([], "1234567", "Ana", "111111", [], [MULTIPLES_HISTORIALES]))
+        servicio = crear_servicio(([], "1234567", "Ana", "111111", [], [MULTIPLES_HISTORIALES], None))
 
         resultado = servicio.analizar(b"contenido", "varios.pdf")
 

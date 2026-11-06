@@ -136,3 +136,104 @@ def generar_word_estudiantes(estudiantes: list[dict[str, str]], convocatoria: di
     document.save(output)
     output.seek(0)
     return output.getvalue()
+
+
+def generar_word_solicitudes_adicion(
+    solicitudes: list[dict[str, str]],
+    convocatoria: dict | None,
+) -> bytes:
+    """Genera una lista Word imprimible para la convocatoria actual de adición."""
+    document = Document()
+    section = document.sections[0]
+    section.orientation = WD_ORIENT.LANDSCAPE
+    section.page_width, section.page_height = section.page_height, section.page_width
+    section.top_margin = Inches(0.4)
+    section.bottom_margin = Inches(0.4)
+    section.left_margin = Inches(0.35)
+    section.right_margin = Inches(0.35)
+
+    datos_convocatoria = convocatoria or {}
+    title = document.add_paragraph(style="Title")
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title.paragraph_format.space_after = Pt(3)
+    title_run = title.add_run("SOLICITUDES DE ADICIÓN DE MATERIA")
+    title_run.font.name = "Arial"
+    title_run._element.rPr.rFonts.set(qn("w:ascii"), "Arial")
+    title_run._element.rPr.rFonts.set(qn("w:hAnsi"), "Arial")
+    title_run.font.size = Pt(14)
+    title_run.font.bold = True
+    title_run.font.color.rgb = RGBColor(0, 0, 0)
+
+    detalles = [str(datos_convocatoria.get("nombre") or "Convocatoria actual")]
+    if datos_convocatoria.get("gestion"):
+        detalles.append(f"Gestión {datos_convocatoria['gestion']}")
+    if datos_convocatoria.get("semestre"):
+        detalles.append(str(datos_convocatoria["semestre"]))
+    subtitle = document.add_paragraph()
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle.paragraph_format.space_after = Pt(8)
+    subtitle_run = subtitle.add_run(" · ".join(detalles))
+    subtitle_run.font.name = "Arial"
+    subtitle_run._element.rPr.rFonts.set(qn("w:ascii"), "Arial")
+    subtitle_run._element.rPr.rFonts.set(qn("w:hAnsi"), "Arial")
+    subtitle_run.font.size = Pt(10)
+    subtitle_run.font.bold = True
+    subtitle_run.font.color.rgb = RGBColor(80, 80, 80)
+
+    headers = [
+        "N°", "NOMBRE", "CI", "RU", "SIGLA", "MATERIA", "SEM.",
+        "CARGA", "PROM.", "CORREO", "CELULAR",
+    ]
+    widths = [0.3, 1.5, 0.7, 0.7, 0.65, 1.45, 0.45, 0.55, 0.55, 1.5, 0.85]
+    table = document.add_table(rows=1, cols=len(headers))
+    table.alignment = WD_TABLE_ALIGNMENT.CENTER
+    table.autofit = False
+    header_row = table.rows[0]
+    _set_repeat_table_header(header_row)
+    for index, header in enumerate(headers):
+        cell = header_row.cells[index]
+        cell.width = Inches(widths[index])
+        _set_cell_shading(cell, "E7E6E6")
+        _format_cell(cell, header, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER)
+
+    for number, solicitud in enumerate(solicitudes, start=1):
+        semestre = solicitud.get("Semestre de materia", "")
+        carga = solicitud.get("Carga total", "")
+        values = [
+            number,
+            solicitud.get("Nombre", ""),
+            solicitud.get("CI", ""),
+            solicitud.get("RU", ""),
+            solicitud.get("Sigla", ""),
+            solicitud.get("Nombre de materia", ""),
+            f"{semestre}.º" if semestre else "—",
+            f"{carga}.ª" if carga else "—",
+            solicitud.get("Promedio", ""),
+            solicitud.get("Correo", ""),
+            solicitud.get("Celular", ""),
+        ]
+        row = table.add_row()
+        for index, value in enumerate(values):
+            cell = row.cells[index]
+            cell.width = Inches(widths[index])
+            _set_cell_shading(cell, "FFFFFF")
+            alignment = WD_ALIGN_PARAGRAPH.LEFT if index in (1, 5, 9) else WD_ALIGN_PARAGRAPH.CENTER
+            _format_cell(cell, str(value), align=alignment)
+
+    if not solicitudes:
+        row = table.add_row()
+        merged = row.cells[0]
+        for cell in row.cells[1:]:
+            merged = merged.merge(cell)
+        _set_cell_shading(merged, "FFFFFF")
+        _format_cell(
+            merged,
+            "No hay solicitudes registradas en esta convocatoria.",
+            color="666666",
+            align=WD_ALIGN_PARAGRAPH.CENTER,
+        )
+
+    output = BytesIO()
+    document.save(output)
+    output.seek(0)
+    return output.getvalue()

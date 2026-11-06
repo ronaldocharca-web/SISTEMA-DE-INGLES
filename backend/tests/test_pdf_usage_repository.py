@@ -89,3 +89,9 @@ class PdfUsageRepositoryTests(unittest.TestCase):
 
         self.assertEqual(estado_ajeno, EN_USO)
         self.assertIsNone(token_ajeno)
+
+    def test_guarda_contexto_calculado_por_el_servidor(self):
+        _estado, token = self.repository.reservar(b"pdf-contexto", self.convocatoria_id)
+        self.repository.guardar_contexto(token, {"promedio": 81.5})
+
+        self.assertEqual(self.repository.obtener_contexto(token), {"promedio": 81.5})
