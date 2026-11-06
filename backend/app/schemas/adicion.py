@@ -14,7 +14,7 @@ class SolicitudAdicionRequest(BaseModel):
     celular: str = Field(min_length=5, max_length=30)
     sigla_materia: str = Field(min_length=2, max_length=30)
     nombre_materia: str = Field(min_length=2, max_length=150)
-    semestre_materia: int = Field(ge=1, le=10)
+    semestre_materia: int | None = Field(default=None, ge=1, le=10)
     numero_materia_total: int = Field(ge=7, le=8)
     pdf_token: str = Field(
         min_length=36,

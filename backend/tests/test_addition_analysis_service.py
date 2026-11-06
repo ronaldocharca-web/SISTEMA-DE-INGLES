@@ -2,6 +2,8 @@ import unittest
 
 from app.services.addition_analysis_service import AdditionAnalysisService
 
+CONVOCATORIA = {'gestion': 2026, 'semestre': 'Segundo semestre'}
+
 
 class ExtractorFalso:
     def __init__(self, registros, promedio_general):
@@ -44,7 +46,7 @@ def servicio(registros, minimo=75, promedio_general=80):
 
 class AdditionAnalysisServiceTests(unittest.TestCase):
     def test_habilita_si_no_hay_reprobados_ni_abandonos_y_alcanza_promedio(self):
-        resultado = servicio([materia(20), materia(30)], promedio_general=85).analizar(b"pdf", "historial.pdf")
+        resultado = servicio([materia(20), materia(30)], promedio_general=85).analizar(b"pdf", "historial.pdf", CONVOCATORIA)
         self.assertEqual(resultado["estado"], "PUEDE_SOLICITAR")
         self.assertEqual(resultado["promedio"], 85)
 
@@ -52,17 +54,34 @@ class AdditionAnalysisServiceTests(unittest.TestCase):
         resultado = servicio([
             materia(50, "REPROBADO", "TUR 101"),
             materia(0, "ABANDONADO", "TUR 102"),
-        ], promedio_general=40).analizar(b"pdf", "historial.pdf")
+        ], promedio_general=40).analizar(b"pdf", "historial.pdf", CONVOCATORIA)
         self.assertEqual(resultado["estado"], "NO_PUEDE_SOLICITAR")
         self.assertEqual(len(resultado["motivos"]), 3)
         self.assertEqual(len(resultado["materias_observadas"]), 2)
 
     def test_respeta_promedio_configurado_por_administrador(self):
-        resultado = servicio([materia(100)], minimo=85, promedio_general=80).analizar(b"pdf", "historial.pdf")
+        resultado = servicio([materia(100)], minimo=85, promedio_general=80).analizar(b"pdf", "historial.pdf", CONVOCATORIA)
         self.assertEqual(resultado["estado"], "NO_PUEDE_SOLICITAR")
         self.assertIn("85.00", resultado["motivos"][0])
 
     def test_rechaza_historial_sin_promedio_general(self):
-        resultado = servicio([materia(90)], promedio_general=None).analizar(b"pdf", "historial.pdf")
+        resultado = servicio([materia(90)], promedio_general=None).analizar(b"pdf", "historial.pdf", CONVOCATORIA)
         self.assertEqual(resultado["estado"], "PDF_NO_VALIDO")
         self.assertIn("PROM.GRAL.", resultado["advertencias"][0])
+
+    def test_ignora_reprobados_y_abandonos_antiguos(self):
+        antiguos = [dict(materia(0, estado), gestion='2023') for estado in ('REPROBADO', 'ABANDONO')]
+        resultado = servicio([*antiguos, materia(90)]).analizar(b'pdf', 'h.pdf', CONVOCATORIA)
+        self.assertEqual(resultado['estado'], 'PUEDE_SOLICITAR')
+
+    def test_rechaza_historial_desactualizado(self):
+        resultado = servicio([dict(materia(90), gestion='2023')]).analizar(b'pdf', 'h.pdf', CONVOCATORIA)
+        self.assertEqual(resultado['estado'], 'NO_PUEDE_SOLICITAR')
+
+    def test_primer_semestre_revisa_segundo_del_anio_anterior(self):
+        convocatoria = {'gestion': 2026, 'semestre': 'Primer semestre'}
+        for estado, esperado in [('APROBADO', 'PUEDE_SOLICITAR'), ('REPROBADO', 'NO_PUEDE_SOLICITAR'), ('ABANDONO', 'NO_PUEDE_SOLICITAR')]:
+            with self.subTest(estado=estado):
+                registro = dict(materia(90, estado), gestion='2025', periodo='SEGUNDO')
+                resultado = servicio([registro]).analizar(b'pdf', 'h.pdf', convocatoria)
+                self.assertEqual(resultado['estado'], esperado)

@@ -279,7 +279,7 @@ create table if not exists public.solicitudes_adicion (
   materia_adicionar text not null,
   sigla_materia text not null,
   nombre_materia text not null,
-  semestre_materia integer not null check (semestre_materia between 1 and 10),
+  semestre_materia integer check (semestre_materia between 1 and 10),
   numero_materia_total integer not null check (numero_materia_total between 7 and 8),
   promedio numeric(5,2) not null,
   unique (convocatoria_id, ci),
@@ -290,6 +290,7 @@ create table if not exists public.solicitudes_adicion (
 alter table public.solicitudes_adicion add column if not exists sigla_materia text;
 alter table public.solicitudes_adicion add column if not exists nombre_materia text;
 alter table public.solicitudes_adicion add column if not exists semestre_materia integer;
+alter table public.solicitudes_adicion alter column semestre_materia drop not null;
 alter table public.solicitudes_adicion add column if not exists numero_materia_total integer;
 update public.solicitudes_adicion
 set

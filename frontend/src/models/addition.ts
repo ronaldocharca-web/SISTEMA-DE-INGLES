@@ -34,7 +34,6 @@ export type SolicitudAdicion = {
   celular: string;
   sigla_materia: string;
   nombre_materia: string;
-  semestre_materia: number;
   numero_materia_total: number;
   pdf_token: string;
 };

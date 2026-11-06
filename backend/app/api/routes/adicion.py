@@ -61,7 +61,7 @@ async def analizar_historial(
     if estado_reserva != RESERVADO or not token:
         raise HTTPException(status_code=503, detail="No fue posible reservar el PDF.")
     try:
-        resultado = service.analizar(contenido, nombre)
+        resultado = service.analizar(contenido, nombre, convocatoria)
         if resultado["estado"] == "PUEDE_SOLICITAR":
             identidad = pdf_usos.asociar_identidad(token, convocatoria["id"], resultado.get("ci", ""), resultado.get("ru", ""))
             if identidad != RESERVADO:

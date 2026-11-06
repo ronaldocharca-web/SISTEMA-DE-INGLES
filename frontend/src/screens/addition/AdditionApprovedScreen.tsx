@@ -18,7 +18,7 @@ export function AdditionApprovedScreen({ resultado, onBack }: { resultado: Resul
         nombre: String(valores.nombre), ci: String(valores.ci), ru: String(valores.ru),
         correo: String(valores.correo), celular: String(valores.celular),
         sigla_materia: String(valores.sigla_materia), nombre_materia: String(valores.nombre_materia),
-        semestre_materia: Number(valores.semestre_materia), numero_materia_total: Number(valores.numero_materia_total),
+        numero_materia_total: Number(valores.numero_materia_total),
         pdf_token: resultado.pdf_token ?? "",
       });
       setMensaje(respuesta.mensaje);
@@ -64,9 +64,6 @@ export function AdditionApprovedScreen({ resultado, onBack }: { resultado: Resul
             </label>
           </div>
           <div className="form-grid-2 subject-fields">
-            <label>Semestre de la materia <span className="required-mark">*</span>
-              <input required type="number" inputMode="numeric" name="semestre_materia" min="1" max="10" step="1" placeholder="Escribe un número del 1 al 10" />
-            </label>
             <label>Con esta adición será tu <span className="required-mark">*</span>
               <input required type="number" inputMode="numeric" name="numero_materia_total" min="7" max="8" step="1" placeholder="Escribe 7 u 8" />
             </label>
