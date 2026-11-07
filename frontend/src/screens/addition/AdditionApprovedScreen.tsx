@@ -21,7 +21,11 @@ export function AdditionApprovedScreen({ resultado, onBack }: { resultado: Resul
         numero_materia_total: Number(valores.numero_materia_total),
         pdf_token: resultado.pdf_token ?? "",
       });
-      setMensaje(respuesta.mensaje);
+      setMensaje(
+        respuesta.duplicado
+          ? respuesta.mensaje
+          : "Su solicitud fue aceptada. Se le comunicará por WhatsApp o correo electrónico sobre los siguientes pasos.",
+      );
       setEstado(respuesta.duplicado ? "duplicate" : "success");
     } catch (exception) {
       setMensaje(exception instanceof Error ? exception.message : "No fue posible registrar la solicitud.");
