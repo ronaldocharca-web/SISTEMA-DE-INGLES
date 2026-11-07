@@ -11,6 +11,10 @@ export function AdditionApprovedScreen({ resultado, onBack }: { resultado: Resul
 
   async function enviar(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const confirmado = window.confirm(
+      "Al enviar la solicitud, ya no podrás volver a editar estos datos. ¿Estás seguro de que son correctos? Si necesitas corregir algo, selecciona Cancelar; si todo está bien, selecciona Aceptar para continuar.",
+    );
+    if (!confirmado) return;
     const valores = Object.fromEntries(new FormData(event.currentTarget).entries());
     setEstado("loading");
     try {
