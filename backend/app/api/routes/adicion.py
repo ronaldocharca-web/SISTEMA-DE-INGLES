@@ -57,7 +57,7 @@ async def analizar_historial(
     if estado_reserva == EN_USO:
         raise HTTPException(status_code=409, detail="El PDF está usándose.")
     if estado_reserva == REGISTRADO:
-        raise HTTPException(status_code=409, detail="Este PDF ya fue registrado.")
+        raise HTTPException(status_code=409, detail="Este usuario ya fue registrado.")
     if estado_reserva != RESERVADO or not token:
         raise HTTPException(status_code=503, detail="No fue posible reservar el PDF.")
     try:
@@ -90,7 +90,7 @@ def registrar_solicitud(solicitud: SolicitudAdicionRequest):
         convocatoria = convocatorias.exigir_abierta()
         estado = pdf_usos.validar_reserva(solicitud.pdf_token, convocatoria["id"], solicitud.ci, solicitud.ru)
         if estado == REGISTRADO:
-            raise HTTPException(status_code=409, detail="Este PDF ya fue registrado.")
+            raise HTTPException(status_code=409, detail="Este usuario ya fue registrado.")
         if estado == INVALIDO:
             raise HTTPException(status_code=409, detail="Los datos no corresponden al historial analizado.")
         if estado == EXPIRADO or estado != RESERVADO:

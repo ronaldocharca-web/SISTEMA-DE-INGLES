@@ -53,7 +53,7 @@ def registrar_estudiante(estudiante: RegistroEstudianteRequest):
             estudiante.ru,
         )
         if estado_pdf == REGISTRADO:
-            raise HTTPException(status_code=409, detail="Este PDF ya fue registrado.")
+            raise HTTPException(status_code=409, detail="Este usuario ya fue registrado.")
         if estado_pdf == INVALIDO:
             raise HTTPException(
                 status_code=409,

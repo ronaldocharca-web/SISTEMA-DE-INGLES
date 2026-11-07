@@ -51,7 +51,7 @@ async def analizar_historial(
     if estado_reserva == EN_USO:
         raise HTTPException(status_code=409, detail="El PDF está usándose.")
     if estado_reserva == REGISTRADO:
-        raise HTTPException(status_code=409, detail="Este PDF ya fue registrado.")
+        raise HTTPException(status_code=409, detail="Este usuario ya fue registrado.")
     if estado_reserva != RESERVADO or token is None:
         raise HTTPException(status_code=503, detail="No fue posible reservar el PDF.")
 
@@ -68,7 +68,7 @@ async def analizar_historial(
             if estado_identidad == EN_USO:
                 raise HTTPException(status_code=409, detail="El PDF está usándose.")
             if estado_identidad == REGISTRADO:
-                raise HTTPException(status_code=409, detail="Este PDF ya fue registrado.")
+                raise HTTPException(status_code=409, detail="Este usuario ya fue registrado.")
             if estado_identidad != RESERVADO:
                 raise HTTPException(status_code=409, detail="La verificación del PDF expiró. Vuelve a subirlo.")
             resultado["pdf_token"] = token
