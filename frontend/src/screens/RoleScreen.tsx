@@ -77,7 +77,7 @@ export function RoleScreen() {
         <section className="hero system-hero">
           <button className="back-home" onClick={volverInicio}>← Volver al menú principal</button>
           <div className="eyebrow">Carrera de Licenciatura en Turismo</div>
-          <h1>{system === "ingles" ? "Verificación Para Ingresar al Examen de Inglés" : "Solicitud de Adición de Materia"}</h1>
+          <h1>{system === "ingles" ? "Verificación Para Ingresar al Clasificacion de Examen de Inglés" : "Solicitud de Adición de Materia"}</h1>
           <p className="subtitle">{system === "ingles" ? "Sube tu historial académico para validar tu habilitación al examen." : "Verifica tus requisitos académicos para adicionar una materia al semestre actual."}</p>
         </section>
         <div className="student-entry">
